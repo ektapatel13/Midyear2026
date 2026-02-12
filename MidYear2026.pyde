@@ -738,10 +738,15 @@ def mouseClicked():
             return
 
     if currentScreen == "game":
+        if fridgeOpen:
+            handleFridgeOverlayClick()
+            return
         if menuOpen:
             if handleMenuClick():
                 return
         if handleMenuClick():
+            return
+        if handleFridgeButtonClick():
             return
         if handleArrowClick():
             return
@@ -754,6 +759,7 @@ def setup():
     global howtoplayImg
     global leftArrow, rightArrow, breakfastBg, arrowRightX
     global cabinetImg, ingredientImgs
+    global fridgeBtn, fridgeBtnY
     size(1510, 915)
 
     leftArrow = loadImage("left_arrow.png")
@@ -769,6 +775,9 @@ def setup():
     mainBg = loadImage("main_background.png")
 
     cabinetImg = loadImage("cabinet_expanded.png")
+
+    fridgeBtn = loadImage("fridge_button.png")
+    fridgeBtnY = height - fridgeBtnH - 20
 
     ingredientImgs["flour"] = loadImage("flour.png")
     ingredientImgs["sugar"] = loadImage("sugar.png")
@@ -789,6 +798,7 @@ def setup():
     ingredientImgs["chocolate_chips"] = loadImage("chocochips_bag.png")
     ingredientImgs["deli_meat"] = loadImage("deli_meat_raw.png")
     ingredientImgs["syrup_bottle"] = loadImage("maple_syrup.png")
+    ingredientImgs["bread"] = loadImage("bread.png")
 
     customer1 = loadImage("character_1_happy.png")
     customer2 = loadImage("character_2_happy.png")
@@ -869,4 +879,6 @@ def drawGame():
     drawMoney()
     drawScorePopups()
     drawMenuUI()
+    drawFridgeButton()
     drawArrows()
+    drawFridgeOverlay()
