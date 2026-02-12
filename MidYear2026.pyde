@@ -147,21 +147,25 @@ bowlRecipes = [
     {"inputs": ["flour", "eggs", "milk"], "output": "batter_bottle"},
     {"inputs": ["dough_formed", "chocolate_chips"], "output": "cookiedough_formed"},
     {"inputs": ["dough_formed", "cream"], "output": "cupcake_unbaked"},
-    {"inputs": ["batter_bottle", "berries_carton"], "output": "pancakes"},
     {"inputs": ["toasted_bread", "fried_egg", "cheese", "bacon_fried"], "output": "egg_sandwich"},
     {"inputs": ["toasted_bread", "chopped_avocado", "chopped_tomato", "bacon_fried"], "output": "avocado_toast"},
     {"inputs": ["toasted_bread", "fried_deli_meat", "cheese"], "output": "panini"},
 ]
 panRecipes = {"eggs": "fried_egg", "raw_bacon": "bacon_fried", "deli_meat": "fried_deli_meat"}
-ovenRecipes = {"bread": "toasted_bread", "cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake"}
+panMultiRecipes = [
+    {"inputs": ["batter_bottle", "berries_carton"], "output": "pancakes"}
+]
+panContents = []
+ovenRecipes = {"cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake"}
 chopRecipes = {"whole_avocado": "chopped_avocado", "whole_tomato": "chopped_tomato"}
+toasterRecipes = {"bread": "toasted_bread"}
 
 boardX = 545
-boardY = 495
+boardY = 575
 boardW = 190
 boardH = 180
 bowlX = 765
-bowlY = 490
+bowlY = 570
 bowlW = 195
 bowlH = 195
 panX = 540
@@ -172,6 +176,11 @@ ovenX = 745
 ovenY = 220
 ovenW = 200
 ovenH = 160
+toasterImg = None
+toasterX = 370
+toasterY = 250
+toasterW = 130
+toasterH = 120
 
 bowlContents = []
 
@@ -514,7 +523,7 @@ def drawScorePopups():
         i += 1
 
 def startGameRound():
-    global showCustomer, gameStartTime, money, currentCustomer, orderActive, dialogOpen, dialogStep, bowlContents, counterItems
+    global showCustomer, gameStartTime, money, currentCustomer, orderActive, dialogOpen, dialogStep, bowlContents, counterItems, panContents
     showCustomer = False
     orderActive = False
     dialogOpen = False
@@ -523,6 +532,7 @@ def startGameRound():
     money = startMoney
     currentCustomer = None
     bowlContents = []
+    panContents = []
     counterItems = []
 
 def drawTimerBar(charX, charY, charW):
@@ -699,8 +709,8 @@ def drawCounterItems():
 def drawKitchenTools():
     if stations[currentStation] != "kitchen":
         return
+    drawToaster()
     drawPan()
-    drawOven()
     drawBoard()
     drawBowl()
 
@@ -710,10 +720,6 @@ def drawBoard():
     rect(boardX, boardY, boardW, boardH, 12)
     fill(140, 100, 50)
     rect(boardX + 8, boardY + 8, boardW - 16, boardH - 16, 8)
-    fill(255, 255, 255, 200)
-    textAlign(CENTER, CENTER)
-    textSize(15)
-    text("Cutting Board", boardX + boardW / 2, boardY + boardH - 20)
 
 def drawBowl():
     noStroke()
@@ -722,10 +728,6 @@ def drawBowl():
     fill(230, 230, 240)
     ellipse(bowlX + bowlW / 2, bowlY + bowlH / 2, bowlW - 40, bowlH - 40)
     drawBowlContents()
-    fill(255, 255, 255, 200)
-    textAlign(CENTER, CENTER)
-    textSize(15)
-    text("Bowl", bowlX + bowlW / 2, bowlY + bowlH - 25)
     if len(bowlContents) >= 1:
         drawBowlButtons()
 
@@ -787,39 +789,126 @@ def drawBowlButtons():
 
 def drawPan():
     noStroke()
-    stoveX = panX - 15
-    stoveY = panY - 10
-    stoveW2 = panW + 30
-    stoveH2 = panH + 20
-    fill(50, 50, 55)
-    rect(stoveX, stoveY, stoveW2, stoveH2, 8)
-    fill(35, 35, 40)
-    rect(stoveX + 6, stoveY + 6, stoveW2 - 12, stoveH2 - 12, 6)
     fill(80, 80, 90)
     ellipse(panX + panW / 2, panY + panH / 2, panW, panH)
     fill(55, 55, 65)
     ellipse(panX + panW / 2, panY + panH / 2, panW - 30, panH - 30)
     fill(100, 100, 110)
     rect(panX + panW - 10, panY + panH / 2 - 10, 45, 20, 6)
-    fill(255, 255, 255, 180)
-    textAlign(CENTER, CENTER)
-    textSize(13)
-    text("Stove / Pan", panX + panW / 2, stoveY + stoveH2 - 14)
+    drawPanContents()
+    if len(panContents) >= 1:
+        drawPanButtons()
 
-def drawOven():
-    noStroke()
-    fill(60, 60, 68)
-    rect(ovenX, ovenY, ovenW, ovenH, 8)
-    fill(45, 45, 52)
-    rect(ovenX + 12, ovenY + 12, ovenW - 24, ovenH - 45, 6)
-    fill(255, 150, 50, 50)
-    rect(ovenX + 16, ovenY + 16, ovenW - 32, ovenH - 53, 4)
-    fill(90, 90, 100)
-    rect(ovenX + ovenW / 2 - 18, ovenY + ovenH - 28, 36, 10, 4)
-    fill(255, 255, 255, 180)
-    textAlign(CENTER, CENTER)
-    textSize(13)
-    text("Oven", ovenX + ovenW / 2, ovenY + ovenH - 12)
+def drawPanContents():
+    if len(panContents) == 0:
+        return
+    iconSize = 38
+    gap = 4
+    totalW = len(panContents) * (iconSize + gap) - gap
+    sx = panX + panW / 2 - totalW / 2
+    sy = panY + panH / 2 - iconSize / 2
+    i = 0
+    while i < len(panContents):
+        name = panContents[i]
+        ix = sx + i * (iconSize + gap)
+        img = ingredientImgs.get(name, None)
+        if img != None:
+            image(img, ix, sy, iconSize, iconSize)
+        else:
+            fill(180)
+            noStroke()
+            rect(ix, sy, iconSize, iconSize, 6)
+            fill(40)
+            textAlign(CENTER, CENTER)
+            textSize(8)
+            text(name, ix + iconSize / 2, sy + iconSize / 2)
+        i += 1
+
+def drawPanButtons():
+    bw = 60
+    bh = 28
+    by = panY + panH + 8
+    if len(panContents) >= 2:
+        mx = panX + panW / 2 - bw - 4
+        noStroke()
+        fill(80, 180, 80)
+        rect(mx, by, bw, bh, 8)
+        fill(255)
+        textAlign(CENTER, CENTER)
+        textSize(14)
+        text("Cook!", mx + bw / 2, by + bh / 2)
+        cx = panX + panW / 2 + 4
+        noStroke()
+        fill(200, 80, 80)
+        rect(cx, by, bw, bh, 8)
+        fill(255)
+        textAlign(CENTER, CENTER)
+        textSize(14)
+        text("Clear", cx + bw / 2, by + bh / 2)
+    else:
+        cx = panX + panW / 2 - bw / 2
+        noStroke()
+        fill(200, 80, 80)
+        rect(cx, by, bw, bh, 8)
+        fill(255)
+        textAlign(CENTER, CENTER)
+        textSize(14)
+        text("Clear", cx + bw / 2, by + bh / 2)
+
+def handlePanButtonClick():
+    global panContents
+    if len(panContents) == 0:
+        return False
+    bw = 60
+    bh = 28
+    by = panY + panH + 8
+    if len(panContents) >= 2:
+        mx = panX + panW / 2 - bw - 4
+        if isOverRect(mouseX, mouseY, mx, by, bw, bh):
+            matched = False
+            best = None
+            for recipe in panMultiRecipes:
+                inputs = recipe["inputs"]
+                if len(inputs) != len(panContents):
+                    continue
+                tempPan = list(panContents)
+                allFound = True
+                for inp in inputs:
+                    if inp in tempPan:
+                        tempPan.remove(inp)
+                    else:
+                        allFound = False
+                        break
+                if allFound and len(tempPan) == 0:
+                    best = recipe
+                    matched = True
+                    break
+            if matched:
+                panContents = []
+                spawnCounterItem(best["output"])
+            return True
+        cx = panX + panW / 2 + 4
+        if isOverRect(mouseX, mouseY, cx, by, bw, bh):
+            i = 0
+            while i < len(panContents):
+                spawnCounterItem(panContents[i])
+                i += 1
+            panContents = []
+            return True
+    else:
+        cx = panX + panW / 2 - bw / 2
+        if isOverRect(mouseX, mouseY, cx, by, bw, bh):
+            i = 0
+            while i < len(panContents):
+                spawnCounterItem(panContents[i])
+                i += 1
+            panContents = []
+            return True
+    return False
+
+def drawToaster():
+    if toasterImg != None:
+        image(toasterImg, toasterX, toasterY, toasterW, toasterH)
 
 def spawnCounterItem(name):
     idx = len(counterItems)
@@ -840,6 +929,15 @@ def handleItemDrop():
     if isOverEllipse(cx, cy, panX + panW / 2, panY + panH / 2, panW / 2 + 20, panH / 2 + 20):
         if name in panRecipes:
             result = panRecipes[name]
+            counterItems.remove(item)
+            spawnCounterItem(result)
+        else:
+            counterItems.remove(item)
+            panContents.append(name)
+        return
+    if isOverRect(cx, cy, toasterX - 15, toasterY - 15, toasterW + 30, toasterH + 30):
+        if name in toasterRecipes:
+            result = toasterRecipes[name]
             counterItems.remove(item)
             spawnCounterItem(result)
         else:
@@ -1098,6 +1196,8 @@ def mouseClicked():
         if handleMenuClick():
             return
         if stations[currentStation] == "kitchen":
+            if handlePanButtonClick():
+                return
             if handleBowlButtonClick():
                 return
         if handleFridgeButtonClick():
@@ -1114,6 +1214,7 @@ def setup():
     global leftArrow, rightArrow, breakfastBg, arrowRightX
     global cabinetImg, ingredientImgs
     global fridgeBtn, fridgeBtnY
+    global toasterImg
     size(1510, 915)
 
     leftArrow = loadImage("left_arrow.png")
@@ -1132,6 +1233,11 @@ def setup():
 
     fridgeBtn = loadImage("fridge_button.png")
     fridgeBtnY = height - fridgeBtnH - 20
+
+    try:
+        toasterImg = loadImage("toaster.png")
+    except:
+        toasterImg = None
 
     ingredientImgs["flour"] = loadImage("flour.png")
     ingredientImgs["sugar"] = loadImage("sugar.png")
