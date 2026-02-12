@@ -108,6 +108,12 @@ overlayW = 900
 overlayH = 900
 overlayX = 0
 overlayY = 0
+fridgeBtn = None
+fridgeBtnW = 90
+fridgeBtnH = 90
+fridgeBtnX = 20
+fridgeBtnY = 0
+
 debugMouse = False
 lastClickMs = 0
 clickCooldownMs = 180
@@ -479,6 +485,18 @@ def drawStation():
     elif stations[currentStation] == "kitchen":
         image(breakfastBg, 0, 0, width, height)
 
+def drawFridgeButton():
+    if stations[currentStation] == "kitchen" and fridgeBtn != None:
+        image(fridgeBtn, fridgeBtnX, fridgeBtnY, fridgeBtnW, fridgeBtnH)
+
+def handleFridgeButtonClick():
+    if stations[currentStation] != "kitchen":
+        return False
+    if isOverRect(mouseX, mouseY, fridgeBtnX, fridgeBtnY, fridgeBtnW, fridgeBtnH):
+        # Fridge functionality will be added later
+        return True
+    return False
+
 def drawArrows():
     if currentStation > 0:
         image(leftArrow, arrowLeftX, arrowY, arrowW, arrowH)
@@ -614,6 +632,8 @@ def mouseClicked():
                 return
         if handleMenuClick():
             return
+        if handleFridgeButtonClick():
+            return
         if handleArrowClick():
             return
         if stations[currentStation] == "order" and dialogOpen:
@@ -625,6 +645,7 @@ def setup():
     global howtoplayImg
     global leftArrow, rightArrow, breakfastBg, arrowRightX
     global cabinetImg, ingredientImgs
+    global fridgeBtn, fridgeBtnY
     size(1510, 915)
 
     leftArrow = loadImage("left_arrow.png")
@@ -640,6 +661,9 @@ def setup():
     mainBg = loadImage("main_background.png")
 
     cabinetImg = loadImage("cabinet_expanded.png")
+
+    fridgeBtn = loadImage("fridge_button.png")
+    fridgeBtnY = height - fridgeBtnH - 20
 
     ingredientImgs["flour"] = loadImage("flour.png")
     ingredientImgs["sugar"] = loadImage("sugar.png")
@@ -739,4 +763,5 @@ def drawGame():
     drawMoney()
     drawScorePopups()
     drawMenuUI()
+    drawFridgeButton()
     drawArrows()
