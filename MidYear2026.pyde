@@ -60,12 +60,10 @@ greetings = [
 "Hello! I have heard great things about this place.",
 "Hi! Everything smells wonderful in here.",
 "Hey there! I have been looking forward to coming here.",
-"You know you'll always catch me at a new cafe.",
 "Hey! Can I get started with something?",
 "Hello there! Just looking for a bite to eat.",
 "Good day! I'm glad I found this place.",
 "Hi, I'm looking for something delicious.",
-"I'm starvingggg",
 "Hello! I am ready to place an order",
 "Hi! It looks nice in here."
 ]
@@ -114,8 +112,8 @@ clickCooldownMs = 180
 recipeCardOpen = False
 currentRecipe = None
 recipeCards = {}
-recipeCardW = 1000
-recipeCardH = 1600
+recipeCardW = 500
+recipeCardH = 555
 menuFoodItems = []
 
 def isOverRect(px, py, rx, ry, rw, rh):
@@ -130,31 +128,31 @@ def loadMenuAssets():
     global menuImg, recipeCards
     menuImg = loadImage("menu.png")
     try:
-        recipeCards["croissant"] = loadImage("3.png")
+        recipeCards["croissant"] = loadImage("croissant_instructions.png")
     except:
         print("Could not load croissant recipe")
     try:
-        recipeCards["pancakes"] = loadImage("7.png")
+        recipeCards["pancakes"] = loadImage("pancakes_instructions.png")
     except:
         print("Could not load pancakes recipe")
     try:
-        recipeCards["egg_sandwich"] = loadImage("8.png")
+        recipeCards["egg_sandwich"] = loadImage("eggsandwich_instructions.png")
     except:
         print("Could not load egg sandwich recipe")
     try:
-        recipeCards["avocado_toast"] = loadImage("6.png")
+        recipeCards["avocado_toast"] = loadImage("avocadotoast_instructions.png")
     except:
         print("Could not load avocado toast recipe")
     try:
-        recipeCards["panini"] = loadImage("9.png")
+        recipeCards["panini"] = loadImage("panini_instructions.png")
     except:
         print("Could not load panini recipe")
     try:
-        recipeCards["cupcake"] = loadImage("5.png")
+        recipeCards["cupcake"] = loadImage("cupcake_instructions.png")
     except:
         print("Could not load cupcake recipe")
     try:
-        recipeCards["cookie"] = loadImage("4.png")
+        recipeCards["cookie"] = loadImage("cookie_instructions.png")
     except:
         print("Could not load cookie recipe")
 
@@ -390,8 +388,8 @@ def advanceDialog():
 def drawSpeechBubble(textMain):
     bubbleW = 320
     bubbleH = 170
-    bubbleX = width/2 - bubbleW/2 + 220
-    bubbleY = 160
+    bubbleX = width/2 - bubbleW/2 + 95
+    bubbleY = 130
     noStroke()
     fill(255)
     rect(bubbleX, bubbleY, bubbleW, bubbleH, 18)
@@ -454,8 +452,8 @@ def startGameRound():
 def drawTimerBar(charX, charY, charW):
     barWidth = 220
     barHeight = 18
-    barX = charX + charW/2 - barWidth/2
-    barY = charY - 22
+    barX = charX + charW/2 - barWidth/2 + 10
+    barY = charY + 10
     fill(50)
     stroke(0)
     strokeWeight(2)
