@@ -106,23 +106,6 @@ overlayW = 900
 overlayH = 900
 overlayX = 0
 overlayY = 0
-fridgeBtn = None
-fridgeBtnW = 90
-fridgeBtnH = 90
-fridgeBtnX = 20
-fridgeBtnY = 0
-
-fridgeOpen = False
-fridgeGrid = [
-    ["eggs", "flour", "butter_stick", "milk", "sugar"],
-    ["whole_avocado", "whole_tomato", "cheese", "deli_meat", "raw_bacon"],
-    ["syrup_bottle", "cream", "chocolate_chips", "bread", "berries_carton"]
-]
-fridgeBtnSize = 140
-fridgeGap = 20
-fridgeGridCols = 5
-fridgeGridRows = 3
-
 debugMouse = False
 lastClickMs = 0
 clickCooldownMs = 180
@@ -494,90 +477,6 @@ def drawStation():
     elif stations[currentStation] == "kitchen":
         image(breakfastBg, 0, 0, width, height)
 
-def drawFridgeButton():
-    if stations[currentStation] == "kitchen" and fridgeBtn != None:
-        image(fridgeBtn, fridgeBtnX, fridgeBtnY, fridgeBtnW, fridgeBtnH)
-
-def handleFridgeButtonClick():
-    global fridgeOpen
-    if stations[currentStation] != "kitchen":
-        return False
-    if isOverRect(mouseX, mouseY, fridgeBtnX, fridgeBtnY, fridgeBtnW, fridgeBtnH):
-        fridgeOpen = True
-        return True
-    return False
-
-def getFridgeGridOrigin():
-    totalW = fridgeGridCols * fridgeBtnSize + (fridgeGridCols - 1) * fridgeGap
-    totalH = fridgeGridRows * fridgeBtnSize + (fridgeGridRows - 1) * fridgeGap
-    gx = width / 2 - totalW / 2
-    gy = height / 2 - totalH / 2
-    return gx, gy
-
-def drawFridgeOverlay():
-    if not fridgeOpen:
-        return
-    noStroke()
-    fill(50, 50, 50, 170)
-    rect(0, 0, width, height)
-    gx, gy = getFridgeGridOrigin()
-    r = 0
-    while r < fridgeGridRows:
-        c = 0
-        while c < fridgeGridCols:
-            x = gx + c * (fridgeBtnSize + fridgeGap)
-            y = gy + r * (fridgeBtnSize + fridgeGap)
-            noStroke()
-            fill(255, 200, 210)
-            rect(x, y, fridgeBtnSize, fridgeBtnSize, 16)
-            name = fridgeGrid[r][c]
-            img = ingredientImgs.get(name, None)
-            if img != None:
-                pad = 14
-                image(img, x + pad, y + pad, fridgeBtnSize - pad * 2, fridgeBtnSize - pad * 2)
-            else:
-                fill(80)
-                textAlign(CENTER, CENTER)
-                textSize(13)
-                text(name, x + fridgeBtnSize / 2, y + fridgeBtnSize / 2)
-            c += 1
-        r += 1
-    drawFridgeCloseButton()
-
-def drawFridgeCloseButton():
-    bx = width - 60
-    by = 20
-    noStroke()
-    fill(255, 80, 80)
-    rect(bx, by, 42, 42, 10)
-    stroke(255)
-    strokeWeight(5)
-    line(bx + 12, by + 12, bx + 30, by + 30)
-    line(bx + 30, by + 12, bx + 12, by + 30)
-    strokeWeight(1)
-
-def handleFridgeOverlayClick():
-    global fridgeOpen
-    if not fridgeOpen:
-        return False
-    bx = width - 60
-    by = 20
-    if isOverRect(mouseX, mouseY, bx, by, 42, 42):
-        fridgeOpen = False
-        return True
-    gx, gy = getFridgeGridOrigin()
-    r = 0
-    while r < fridgeGridRows:
-        c = 0
-        while c < fridgeGridCols:
-            x = gx + c * (fridgeBtnSize + fridgeGap)
-            y = gy + r * (fridgeBtnSize + fridgeGap)
-            if isOverRect(mouseX, mouseY, x, y, fridgeBtnSize, fridgeBtnSize):
-                return True
-            c += 1
-        r += 1
-    return True
-
 def drawArrows():
     if currentStation > 0:
         image(leftArrow, arrowLeftX, arrowY, arrowW, arrowH)
@@ -708,15 +607,10 @@ def mouseClicked():
             return
 
     if currentScreen == "game":
-        if fridgeOpen:
-            handleFridgeOverlayClick()
-            return
         if menuOpen:
             if handleMenuClick():
                 return
         if handleMenuClick():
-            return
-        if handleFridgeButtonClick():
             return
         if handleArrowClick():
             return
@@ -729,7 +623,6 @@ def setup():
     global howtoplayImg
     global leftArrow, rightArrow, breakfastBg, arrowRightX
     global cabinetImg, ingredientImgs
-    global fridgeBtn, fridgeBtnY
     size(1510, 915)
 
     leftArrow = loadImage("left_arrow.png")
@@ -745,9 +638,6 @@ def setup():
     mainBg = loadImage("main_background.png")
 
     cabinetImg = loadImage("cabinet_expanded.png")
-
-    fridgeBtn = loadImage("fridge_button.png")
-    fridgeBtnY = height - fridgeBtnH - 20
 
     ingredientImgs["flour"] = loadImage("flour.png")
     ingredientImgs["sugar"] = loadImage("sugar.png")
@@ -768,7 +658,6 @@ def setup():
     ingredientImgs["chocolate_chips"] = loadImage("chocochips_bag.png")
     ingredientImgs["deli_meat"] = loadImage("deli_meat_raw.png")
     ingredientImgs["syrup_bottle"] = loadImage("maple_syrup.png")
-    ingredientImgs["bread"] = loadImage("bread.png")
 
     customer1 = loadImage("character_1_happy.png")
     customer2 = loadImage("character_2_happy.png")
@@ -848,6 +737,4 @@ def drawGame():
     drawMoney()
     drawScorePopups()
     drawMenuUI()
-    drawFridgeButton()
     drawArrows()
-    drawFridgeOverlay()
