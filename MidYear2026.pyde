@@ -124,11 +124,18 @@ fridgeGridCols = 5
 fridgeGridRows = 3
 
 counterItems = []
-counterItemSize = 170
-counterItemGap = 30
+counterItemSize = 210
+counterColGap = 30
+counterRowGap = 8
 counterMaxPerRow = 2
+counterMaxPerSide = 4
 counterStartX = 15
-counterStartY = 500
+counterStartY = 480
+
+draggingItem = None
+dragOffsetX = 0
+dragOffsetY = 0
+wasDragging = False
 
 debugMouse = False
 lastClickMs = 0
@@ -581,25 +588,47 @@ def handleFridgeOverlayClick():
             y = gy + r * (fridgeBtnSize + fridgeGap)
             if isOverRect(mouseX, mouseY, x, y, fridgeBtnSize, fridgeBtnSize):
                 name = fridgeGrid[r][c]
-                if name not in counterItems:
-                    counterItems.append(name)
+                if not counterHasItem(name):
+                    idx = len(counterItems)
+                    px, py = getCounterItemPos(idx)
+                    counterItems.append({"name": name, "x": px, "y": py})
                 fridgeOpen = False
                 return True
             c += 1
         r += 1
     return True
 
+def getCounterItemPos(index):
+    side = index // counterMaxPerSide
+    localIdx = index % counterMaxPerSide
+    col = localIdx % counterMaxPerRow
+    row = localIdx // counterMaxPerRow
+    if side == 0:
+        x = counterStartX + col * (counterItemSize + counterColGap)
+    else:
+        rightStartX = width - counterStartX - counterMaxPerRow * counterItemSize - (counterMaxPerRow - 1) * counterColGap
+        x = rightStartX + col * (counterItemSize + counterColGap)
+    y = counterStartY + row * (counterItemSize + counterRowGap)
+    return x, y
+
+def counterHasItem(name):
+    i = 0
+    while i < len(counterItems):
+        if counterItems[i]["name"] == name:
+            return True
+        i += 1
+    return False
+
 def drawCounterItems():
     if stations[currentStation] != "kitchen":
         return
     i = 0
     while i < len(counterItems):
-        name = counterItems[i]
+        item = counterItems[i]
+        name = item["name"]
         img = ingredientImgs.get(name, None)
-        col = i % counterMaxPerRow
-        row = i // counterMaxPerRow
-        x = counterStartX + col * (counterItemSize + counterItemGap)
-        y = counterStartY + row * (counterItemSize + counterItemGap)
+        x = item["x"]
+        y = item["y"]
         if img != None:
             image(img, x, y, counterItemSize, counterItemSize)
         else:
@@ -716,13 +745,44 @@ def keyPressed():
     if key == 'd' or key == 'D':
         debugMouse = not debugMouse
 
+def mousePressed():
+    global draggingItem, dragOffsetX, dragOffsetY, wasDragging
+    wasDragging = False
+    if currentScreen != "game" or stations[currentStation] != "kitchen":
+        return
+    if fridgeOpen or cabinetOpen or menuOpen or recipeCardOpen:
+        return
+    i = len(counterItems) - 1
+    while i >= 0:
+        item = counterItems[i]
+        if isOverRect(mouseX, mouseY, item["x"], item["y"], counterItemSize, counterItemSize):
+            draggingItem = item
+            dragOffsetX = mouseX - item["x"]
+            dragOffsetY = mouseY - item["y"]
+            return
+        i -= 1
+
+def mouseDragged():
+    global wasDragging
+    if draggingItem != None:
+        draggingItem["x"] = mouseX - dragOffsetX
+        draggingItem["y"] = mouseY - dragOffsetY
+        wasDragging = True
+
+def mouseReleased():
+    global draggingItem
+    draggingItem = None
+
 def mouseClicked():
-    global currentScreen, howtoplayOpen, lastClickMs, debugMouse
+    global currentScreen, howtoplayOpen, lastClickMs, debugMouse, wasDragging
+    if wasDragging:
+        wasDragging = False
+        return
     now = millis()
     if now - lastClickMs < clickCooldownMs:
         return
     lastClickMs = now
-    
+
     if recipeCardOpen:
         handleMenuClick()
         return
