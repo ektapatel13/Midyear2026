@@ -486,9 +486,7 @@ def drawArrows():
         image(rightArrow, arrowRightX, arrowY, arrowW, arrowH)
 
 def handleArrowClick():
-    global currentStation, cabinetOpen, openCabinetKey
-    if cabinetOpen:
-        return False
+    global currentStation
     if currentStation > 0:
         if isOverRect(mouseX, mouseY, arrowLeftX, arrowY, arrowW, arrowH):
             currentStation -= 1
@@ -616,8 +614,6 @@ def mouseClicked():
                 return
         if handleMenuClick():
             return
-        if handleKitchenCabinetClick():
-            return
         if handleArrowClick():
             return
         if stations[currentStation] == "order" and dialogOpen:
@@ -739,9 +735,6 @@ def drawGame():
             drawSpeechBubble(greetingText)
         else:
             drawSpeechBubble(orderText)
-
-    if stations[currentStation] == "kitchen":
-        drawCabinetOverlay()
 
     drawMoney()
     drawScorePopups()
