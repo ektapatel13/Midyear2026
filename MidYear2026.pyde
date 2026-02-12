@@ -125,8 +125,8 @@ fridgeGridRows = 3
 
 counterItems = []
 counterItemSize = 90
-counterStartX = 20
-counterStartY = 200
+counterStartX = 140
+counterStartY = 580
 
 debugMouse = False
 lastClickMs = 0
@@ -594,8 +594,8 @@ def drawCounterItems():
     while i < len(counterItems):
         name = counterItems[i]
         img = ingredientImgs.get(name, None)
-        x = counterStartX
-        y = counterStartY + i * (counterItemSize + 10)
+        x = counterStartX + i * (counterItemSize + 10)
+        y = counterStartY
         if img != None:
             image(img, x, y, counterItemSize, counterItemSize)
         else:
