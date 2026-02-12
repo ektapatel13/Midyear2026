@@ -124,9 +124,9 @@ fridgeGridCols = 5
 fridgeGridRows = 3
 
 counterItems = []
-counterItemSize = 120
-counterItemGap = 10
-counterMaxPerRow = 3
+counterItemSize = 170
+counterItemGap = 30
+counterMaxPerRow = 2
 counterStartX = 15
 counterStartY = 500
 
