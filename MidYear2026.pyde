@@ -123,6 +123,11 @@ fridgeGap = 20
 fridgeGridCols = 5
 fridgeGridRows = 3
 
+counterItems = []
+counterItemSize = 90
+counterStartX = 20
+counterStartY = 200
+
 debugMouse = False
 lastClickMs = 0
 clickCooldownMs = 180
@@ -557,7 +562,7 @@ def drawFridgeCloseButton():
     strokeWeight(1)
 
 def handleFridgeOverlayClick():
-    global fridgeOpen
+    global fridgeOpen, counterItems
     if not fridgeOpen:
         return False
     bx = width - 60
@@ -573,10 +578,35 @@ def handleFridgeOverlayClick():
             x = gx + c * (fridgeBtnSize + fridgeGap)
             y = gy + r * (fridgeBtnSize + fridgeGap)
             if isOverRect(mouseX, mouseY, x, y, fridgeBtnSize, fridgeBtnSize):
+                name = fridgeGrid[r][c]
+                if name not in counterItems:
+                    counterItems.append(name)
+                fridgeOpen = False
                 return True
             c += 1
         r += 1
     return True
+
+def drawCounterItems():
+    if stations[currentStation] != "kitchen":
+        return
+    i = 0
+    while i < len(counterItems):
+        name = counterItems[i]
+        img = ingredientImgs.get(name, None)
+        x = counterStartX
+        y = counterStartY + i * (counterItemSize + 10)
+        if img != None:
+            image(img, x, y, counterItemSize, counterItemSize)
+        else:
+            fill(255, 200, 210)
+            noStroke()
+            rect(x, y, counterItemSize, counterItemSize, 10)
+            fill(80)
+            textAlign(CENTER, CENTER)
+            textSize(12)
+            text(name, x + counterItemSize / 2, y + counterItemSize / 2)
+        i += 1
 
 def drawArrows():
     if currentStation > 0:
@@ -845,6 +875,7 @@ def drawGame():
         else:
             drawSpeechBubble(orderText)
 
+    drawCounterItems()
     drawMoney()
     drawScorePopups()
     drawMenuUI()
