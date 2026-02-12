@@ -156,22 +156,22 @@ panRecipes = {"eggs": "fried_egg", "raw_bacon": "bacon_fried", "deli_meat": "fri
 ovenRecipes = {"bread": "toasted_bread", "cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake"}
 chopRecipes = {"whole_avocado": "chopped_avocado", "whole_tomato": "chopped_tomato"}
 
-boardX = 495
-boardY = 435
-boardW = 180
-boardH = 150
-bowlX = 740
-bowlY = 425
-bowlW = 200
-bowlH = 200
-panX = 495
-panY = 650
-panW = 200
-panH = 155
-ovenX = 740
-ovenY = 650
-ovenW = 220
-ovenH = 170
+boardX = 545
+boardY = 495
+boardW = 190
+boardH = 180
+bowlX = 765
+bowlY = 490
+bowlW = 195
+bowlH = 195
+panX = 540
+panY = 230
+panW = 175
+panH = 140
+ovenX = 745
+ovenY = 220
+ovenW = 200
+ovenH = 160
 
 bowlContents = []
 
@@ -699,10 +699,10 @@ def drawCounterItems():
 def drawKitchenTools():
     if stations[currentStation] != "kitchen":
         return
-    drawBoard()
-    drawBowl()
     drawPan()
     drawOven()
+    drawBoard()
+    drawBowl()
 
 def drawBoard():
     noStroke()
@@ -787,29 +787,39 @@ def drawBowlButtons():
 
 def drawPan():
     noStroke()
+    stoveX = panX - 15
+    stoveY = panY - 10
+    stoveW2 = panW + 30
+    stoveH2 = panH + 20
+    fill(50, 50, 55)
+    rect(stoveX, stoveY, stoveW2, stoveH2, 8)
+    fill(35, 35, 40)
+    rect(stoveX + 6, stoveY + 6, stoveW2 - 12, stoveH2 - 12, 6)
     fill(80, 80, 90)
     ellipse(panX + panW / 2, panY + panH / 2, panW, panH)
     fill(55, 55, 65)
-    ellipse(panX + panW / 2, panY + panH / 2, panW - 35, panH - 35)
+    ellipse(panX + panW / 2, panY + panH / 2, panW - 30, panH - 30)
     fill(100, 100, 110)
-    rect(panX + panW - 15, panY + panH / 2 - 12, 55, 24, 8)
-    fill(255, 255, 255, 200)
+    rect(panX + panW - 10, panY + panH / 2 - 10, 45, 20, 6)
+    fill(255, 255, 255, 180)
     textAlign(CENTER, CENTER)
-    textSize(15)
-    text("Pan", panX + panW / 2, panY + panH - 22)
+    textSize(13)
+    text("Stove / Pan", panX + panW / 2, stoveY + stoveH2 - 14)
 
 def drawOven():
     noStroke()
-    fill(70, 70, 80)
-    rect(ovenX, ovenY, ovenW, ovenH, 10)
-    fill(40, 40, 50)
-    rect(ovenX + 20, ovenY + 20, ovenW - 40, ovenH - 60, 8)
-    fill(255, 150, 50, 60)
-    rect(ovenX + 25, ovenY + 25, ovenW - 50, ovenH - 70, 6)
-    fill(255, 255, 255, 200)
+    fill(60, 60, 68)
+    rect(ovenX, ovenY, ovenW, ovenH, 8)
+    fill(45, 45, 52)
+    rect(ovenX + 12, ovenY + 12, ovenW - 24, ovenH - 45, 6)
+    fill(255, 150, 50, 50)
+    rect(ovenX + 16, ovenY + 16, ovenW - 32, ovenH - 53, 4)
+    fill(90, 90, 100)
+    rect(ovenX + ovenW / 2 - 18, ovenY + ovenH - 28, 36, 10, 4)
+    fill(255, 255, 255, 180)
     textAlign(CENTER, CENTER)
-    textSize(15)
-    text("Oven", ovenX + ovenW / 2, ovenY + ovenH - 18)
+    textSize(13)
+    text("Oven", ovenX + ovenW / 2, ovenY + ovenH - 12)
 
 def spawnCounterItem(name):
     idx = len(counterItems)
