@@ -136,6 +136,9 @@ draggingItem = None
 dragOffsetX = 0
 dragOffsetY = 0
 wasDragging = False
+dragStartX = 0
+dragStartY = 0
+dragThreshold = 5
 
 debugMouse = False
 lastClickMs = 0
@@ -541,14 +544,25 @@ def drawFridgeOverlay():
         while c < fridgeGridCols:
             x = gx + c * (fridgeBtnSize + fridgeGap)
             y = gy + r * (fridgeBtnSize + fridgeGap)
-            noStroke()
-            fill(255, 200, 210)
-            rect(x, y, fridgeBtnSize, fridgeBtnSize, 16)
             name = fridgeGrid[r][c]
+            alreadySelected = counterHasItem(name)
+            if alreadySelected:
+                stroke(80, 200, 80)
+                strokeWeight(4)
+                fill(200, 240, 200)
+            else:
+                noStroke()
+                fill(255, 200, 210)
+            rect(x, y, fridgeBtnSize, fridgeBtnSize, 16)
+            strokeWeight(1)
             img = ingredientImgs.get(name, None)
             if img != None:
                 pad = 14
+                if alreadySelected:
+                    tint(255, 160)
                 image(img, x + pad, y + pad, fridgeBtnSize - pad * 2, fridgeBtnSize - pad * 2)
+                if alreadySelected:
+                    noTint()
             else:
                 fill(80)
                 textAlign(CENTER, CENTER)
@@ -592,7 +606,6 @@ def handleFridgeOverlayClick():
                     idx = len(counterItems)
                     px, py = getCounterItemPos(idx)
                     counterItems.append({"name": name, "x": px, "y": py})
-                fridgeOpen = False
                 return True
             c += 1
         r += 1
@@ -746,12 +759,14 @@ def keyPressed():
         debugMouse = not debugMouse
 
 def mousePressed():
-    global draggingItem, dragOffsetX, dragOffsetY, wasDragging
+    global draggingItem, dragOffsetX, dragOffsetY, wasDragging, dragStartX, dragStartY
     wasDragging = False
     if currentScreen != "game" or stations[currentStation] != "kitchen":
         return
     if fridgeOpen or cabinetOpen or menuOpen or recipeCardOpen:
         return
+    dragStartX = mouseX
+    dragStartY = mouseY
     i = len(counterItems) - 1
     while i >= 0:
         item = counterItems[i]
@@ -759,15 +774,20 @@ def mousePressed():
             draggingItem = item
             dragOffsetX = mouseX - item["x"]
             dragOffsetY = mouseY - item["y"]
+            counterItems.remove(item)
+            counterItems.append(item)
             return
         i -= 1
 
 def mouseDragged():
     global wasDragging
     if draggingItem != None:
-        draggingItem["x"] = mouseX - dragOffsetX
-        draggingItem["y"] = mouseY - dragOffsetY
-        wasDragging = True
+        dx = mouseX - dragStartX
+        dy = mouseY - dragStartY
+        if wasDragging or abs(dx) > dragThreshold or abs(dy) > dragThreshold:
+            draggingItem["x"] = mouseX - dragOffsetX
+            draggingItem["y"] = mouseY - dragOffsetY
+            wasDragging = True
 
 def mouseReleased():
     global draggingItem
