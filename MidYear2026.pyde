@@ -45,8 +45,8 @@ leftArrow = None
 rightArrow = None
 arrowW = 70
 arrowH = 70
-arrowLeftX = 30
-arrowY = 430
+arrowLeftX = 26
+arrowY = 357
 arrowRightX = 0
 
 stations = ["order", "kitchen"]
@@ -109,7 +109,7 @@ overlayY = 0
 fridgeBtn = None
 fridgeBtnW = 90
 fridgeBtnH = 90
-fridgeBtnX = 20
+fridgeBtnX = 17
 fridgeBtnY = 0
 
 fridgeOpen = False
@@ -124,13 +124,13 @@ fridgeGridCols = 5
 fridgeGridRows = 3
 
 counterItems = []
-counterItemSize = 210
-counterColGap = 30
-counterRowGap = 8
+counterItemSize = 160
+counterColGap = -5
+counterRowGap = -45
 counterMaxPerRow = 2
 counterMaxPerSide = 4
-counterStartX = 15
-counterStartY = 480
+counterStartX = 27
+counterStartY = 430
 
 draggingItem = None
 dragOffsetX = 0
@@ -160,27 +160,27 @@ ovenRecipes = {"cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake"}
 chopRecipes = {"whole_avocado": "chopped_avocado", "whole_tomato": "chopped_tomato"}
 toasterRecipes = {"bread": "toasted_bread"}
 
-boardX = 528
-boardY = 650
-boardW = 230
-boardH = 130
-bowlX = 788
-bowlY = 625
-bowlW = 195
-bowlH = 195
-panX = 570
-panY = 248
-panW = 120
-panH = 75
+boardX = 370
+boardY = 430
+boardW = 340
+boardH = 315
+bowlX = 670
+bowlY = 455
+bowlW = 260
+bowlH = 260
+panX = 509
+panY = 225
+panW = 190
+panH = 145
 ovenX = 745
 ovenY = 220
 ovenW = 200
 ovenH = 160
 toasterImg = None
-toasterX = 370
-toasterY = 250
-toasterW = 130
-toasterH = 120
+toasterX = 387
+toasterY = 224
+toasterW = 85
+toasterH = 75
 boardImg = None
 bowlImg = None
 panImg = None
@@ -472,10 +472,10 @@ def advanceDialog():
         dialogOpen = False
 
 def drawSpeechBubble(textMain):
-    bubbleW = 320
-    bubbleH = 170
-    bubbleX = width/2 - bubbleW/2 + 95
-    bubbleY = 130
+    bubbleW = 290
+    bubbleH = 140
+    bubbleX = width/2 - bubbleW/2 + 82
+    bubbleY = 55
     noStroke()
     fill(255)
     rect(bubbleX, bubbleY, bubbleW, bubbleH, 18)
@@ -541,8 +541,8 @@ def startGameRound():
 def drawTimerBar(charX, charY, charW):
     barWidth = 220
     barHeight = 18
-    barX = charX + charW/2 - barWidth/2 + 10
-    barY = charY + 10
+    barX = charX + charW/2 - barWidth/2
+    barY = charY + 15
     fill(50)
     stroke(0)
     strokeWeight(2)
@@ -1224,7 +1224,7 @@ def setup():
     global cabinetImg, ingredientImgs
     global fridgeBtn, fridgeBtnY
     global toasterImg, boardImg, bowlImg, panImg
-    size(1510, 915)
+    size(1300, 760)
 
     leftArrow = loadImage("left_arrow.png")
     rightArrow = loadImage("right_arrow.png")
@@ -1356,8 +1356,8 @@ def drawGame():
     if stations[currentStation] == "order" and showCustomer and currentCustomer != None:
         charW = 320
         charH = 320
-        charX = width/2 - charW/2 - 30
-        charY = 335
+        charX = width/2 - charW/2 - 20
+        charY = 225
         image(currentCustomer, charX, charY, charW, charH)
         drawTimerBar(charX, charY, charW)
 
