@@ -143,8 +143,8 @@ dragOrigX = 0
 dragOrigY = 0
 
 bowlRecipes = [
-    {"inputs": ["flour", "eggs", "milk", "sugar"], "output": "dough_formed"},
-    {"inputs": ["flour", "eggs", "milk"], "output": "batter_bottle"},
+    {"inputs": ["flour", "cracked_egg", "milk", "sugar"], "output": "dough_formed"},
+    {"inputs": ["flour", "cracked_egg", "milk"], "output": "batter_bottle"},
     {"inputs": ["dough_formed", "chocolate_chips"], "output": "cookiedough_formed"},
     {"inputs": ["dough_formed", "cream"], "output": "cupcake_unbaked"},
     {"inputs": ["toasted_bread", "chopped_avocado", "chopped_tomato", "fried_bacon"], "output": "avocado_toast"},
@@ -166,6 +166,27 @@ boardMultiRecipes = [
 ]
 boardContents = []
 
+boardX = 452
+boardY = 530
+boardW = 200
+boardH = 110
+bowlX = 677
+bowlY = 500
+bowlW = 170
+bowlH = 170
+panX = 490
+panY = 195
+panW = 100
+panH = 62
+ovenX = 635
+ovenY = 185
+ovenW = 170
+ovenH = 130
+toasterImg = None
+toasterX = 320
+toasterY = 205
+toasterW = 110
+toasterH = 100
 boardX = 370
 boardY = 430
 boardW = 340
@@ -740,8 +761,8 @@ def drawBoard():
 def drawBoardContents():
     if len(boardContents) == 0:
         return
-    iconSize = 38
-    gap = 4
+    iconSize = counterItemSize
+    gap = 10
     totalW = len(boardContents) * (iconSize + gap) - gap
     sx = boardX + boardW / 2 - totalW / 2
     sy = boardY + boardH / 2 - iconSize / 2
@@ -1020,7 +1041,10 @@ def handleItemDrop():
     cy = item["y"] + counterItemSize / 2
     if isOverEllipse(cx, cy, bowlX + bowlW / 2, bowlY + bowlH / 2, bowlW / 2 + 30, bowlH / 2 + 30):
         counterItems.remove(item)
-        bowlContents.append(name)
+        if name == "eggs":
+            bowlContents.append("cracked_egg")
+        else:
+            bowlContents.append(name)
         return
     if isOverEllipse(cx, cy, panX + panW / 2, panY + panH / 2, panW / 2 + 20, panH / 2 + 20):
         if name in panRecipes:
@@ -1310,6 +1334,8 @@ def setup():
     global fridgeBtn, fridgeBtnY
     global toasterImg, boardImg, bowlImg, panImg
     size(1300, 760)
+    smooth()
+    frameRate(60)
 
     leftArrow = loadImage("left_arrow.png")
     rightArrow = loadImage("right_arrow.png")
@@ -1367,7 +1393,7 @@ def setup():
     ingredientImgs["bread"] = loadImage("bread.png")
 
     productNames = ["dough_formed", "buttered_dough", "cookiedough_formed",
-                     "cupcake_unbaked", "fried_egg", "fried_bacon",
+                     "cupcake_unbaked", "cracked_egg", "fried_egg", "fried_bacon",
                      "fried_deli_meat", "toasted_bread", "chopped_avocado",
                      "chopped_tomato", "empty_pancakes", "pancakes_nosyrup",
                      "pancakes", "toastedbread_withegg",
