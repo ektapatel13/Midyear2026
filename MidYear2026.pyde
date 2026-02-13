@@ -166,27 +166,27 @@ boardMultiRecipes = [
 ]
 boardContents = []
 
-boardX = 528
-boardY = 650
-boardW = 230
-boardH = 130
-bowlX = 788
-bowlY = 625
-bowlW = 195
-bowlH = 195
-panX = 570
-panY = 248
-panW = 120
-panH = 75
-ovenX = 745
-ovenY = 220
-ovenW = 200
-ovenH = 160
+boardX = 452
+boardY = 530
+boardW = 200
+boardH = 110
+bowlX = 677
+bowlY = 500
+bowlW = 170
+bowlH = 170
+panX = 490
+panY = 195
+panW = 100
+panH = 62
+ovenX = 635
+ovenY = 185
+ovenW = 170
+ovenH = 130
 toasterImg = None
-toasterX = 370
-toasterY = 250
-toasterW = 130
-toasterH = 120
+toasterX = 320
+toasterY = 205
+toasterW = 110
+toasterH = 100
 boardImg = None
 bowlImg = None
 panImg = None
@@ -1312,7 +1312,7 @@ def setup():
     global cabinetImg, ingredientImgs
     global fridgeBtn, fridgeBtnY
     global toasterImg, boardImg, bowlImg, panImg
-    size(1510, 915)
+    size(1300, 760)
     smooth()
     frameRate(60)
 
