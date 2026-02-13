@@ -45,8 +45,8 @@ leftArrow = None
 rightArrow = None
 arrowW = 70
 arrowH = 70
-arrowLeftX = 30
-arrowY = 430
+arrowLeftX = 26
+arrowY = 357
 arrowRightX = 0
 
 stations = ["order", "kitchen"]
@@ -109,7 +109,7 @@ overlayY = 0
 fridgeBtn = None
 fridgeBtnW = 90
 fridgeBtnH = 90
-fridgeBtnX = 20
+fridgeBtnX = 17
 fridgeBtnY = 0
 
 fridgeOpen = False
@@ -124,13 +124,13 @@ fridgeGridCols = 5
 fridgeGridRows = 3
 
 counterItems = []
-counterItemSize = 210
-counterColGap = 30
-counterRowGap = 8
+counterItemSize = 160
+counterColGap = -5
+counterRowGap = -45
 counterMaxPerRow = 2
 counterMaxPerSide = 4
-counterStartX = 15
-counterStartY = 480
+counterStartX = 27
+counterStartY = 430
 
 draggingItem = None
 dragOffsetX = 0
@@ -187,6 +187,27 @@ toasterX = 320
 toasterY = 205
 toasterW = 110
 toasterH = 100
+boardX = 370
+boardY = 430
+boardW = 340
+boardH = 315
+bowlX = 670
+bowlY = 455
+bowlW = 260
+bowlH = 260
+panX = 509
+panY = 225
+panW = 190
+panH = 145
+ovenX = 745
+ovenY = 220
+ovenW = 200
+ovenH = 160
+toasterImg = None
+toasterX = 387
+toasterY = 224
+toasterW = 85
+toasterH = 75
 boardImg = None
 bowlImg = None
 panImg = None
@@ -478,10 +499,10 @@ def advanceDialog():
         dialogOpen = False
 
 def drawSpeechBubble(textMain):
-    bubbleW = 320
-    bubbleH = 170
-    bubbleX = width/2 - bubbleW/2 + 95
-    bubbleY = 130
+    bubbleW = 290
+    bubbleH = 140
+    bubbleX = width/2 - bubbleW/2 + 82
+    bubbleY = 55
     noStroke()
     fill(255)
     rect(bubbleX, bubbleY, bubbleW, bubbleH, 18)
@@ -548,8 +569,8 @@ def startGameRound():
 def drawTimerBar(charX, charY, charW):
     barWidth = 220
     barHeight = 18
-    barX = charX + charW/2 - barWidth/2 + 10
-    barY = charY + 10
+    barX = charX + charW/2 - barWidth/2
+    barY = charY + 15
     fill(50)
     stroke(0)
     strokeWeight(2)
@@ -1449,8 +1470,8 @@ def drawGame():
     if stations[currentStation] == "order" and showCustomer and currentCustomer != None:
         charW = 320
         charH = 320
-        charX = width/2 - charW/2 - 30
-        charY = 335
+        charX = width/2 - charW/2 - 20
+        charY = 225
         image(currentCustomer, charX, charY, charW, charH)
         drawTimerBar(charX, charY, charW)
 
