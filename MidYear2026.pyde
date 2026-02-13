@@ -160,18 +160,18 @@ ovenRecipes = {"cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake"}
 chopRecipes = {"whole_avocado": "chopped_avocado", "whole_tomato": "chopped_tomato"}
 toasterRecipes = {"bread": "toasted_bread"}
 
-boardX = 545
-boardY = 575
-boardW = 190
-boardH = 180
-bowlX = 765
-bowlY = 570
+boardX = 528
+boardY = 650
+boardW = 230
+boardH = 130
+bowlX = 788
+bowlY = 625
 bowlW = 195
 bowlH = 195
-panX = 540
-panY = 230
-panW = 175
-panH = 140
+panX = 570
+panY = 248
+panW = 120
+panH = 75
 ovenX = 745
 ovenY = 220
 ovenW = 200
@@ -181,6 +181,9 @@ toasterX = 370
 toasterY = 250
 toasterW = 130
 toasterH = 120
+boardImg = None
+bowlImg = None
+panImg = None
 
 bowlContents = []
 
@@ -715,18 +718,24 @@ def drawKitchenTools():
     drawBowl()
 
 def drawBoard():
-    noStroke()
-    fill(160, 120, 70)
-    rect(boardX, boardY, boardW, boardH, 12)
-    fill(140, 100, 50)
-    rect(boardX + 8, boardY + 8, boardW - 16, boardH - 16, 8)
+    if boardImg != None:
+        image(boardImg, boardX, boardY, boardW, boardH)
+    else:
+        noStroke()
+        fill(170, 130, 75)
+        rect(boardX, boardY, boardW, boardH, 6)
+        fill(150, 110, 55)
+        rect(boardX + 6, boardY + 6, boardW - 12, boardH - 12, 4)
 
 def drawBowl():
-    noStroke()
-    fill(200, 200, 210)
-    ellipse(bowlX + bowlW / 2, bowlY + bowlH / 2, bowlW, bowlH)
-    fill(230, 230, 240)
-    ellipse(bowlX + bowlW / 2, bowlY + bowlH / 2, bowlW - 40, bowlH - 40)
+    if bowlImg != None:
+        image(bowlImg, bowlX, bowlY, bowlW, bowlH)
+    else:
+        noStroke()
+        fill(200, 200, 210)
+        ellipse(bowlX + bowlW / 2, bowlY + bowlH / 2, bowlW, bowlH)
+        fill(230, 230, 240)
+        ellipse(bowlX + bowlW / 2, bowlY + bowlH / 2, bowlW - 40, bowlH - 40)
     drawBowlContents()
     if len(bowlContents) >= 1:
         drawBowlButtons()
@@ -788,13 +797,16 @@ def drawBowlButtons():
         text("Clear", cx + bw / 2, by + bh / 2)
 
 def drawPan():
-    noStroke()
-    fill(80, 80, 90)
-    ellipse(panX + panW / 2, panY + panH / 2, panW, panH)
-    fill(55, 55, 65)
-    ellipse(panX + panW / 2, panY + panH / 2, panW - 30, panH - 30)
-    fill(100, 100, 110)
-    rect(panX + panW - 10, panY + panH / 2 - 10, 45, 20, 6)
+    if panImg != None:
+        image(panImg, panX, panY, panW, panH)
+    else:
+        noStroke()
+        fill(80, 80, 90)
+        ellipse(panX + panW / 2, panY + panH / 2, panW, panH)
+        fill(55, 55, 63)
+        ellipse(panX + panW / 2, panY + panH / 2, panW - 18, panH - 12)
+        fill(95, 95, 105)
+        rect(panX + panW - 8, panY + panH / 2 - 7, 38, 14, 5)
     drawPanContents()
     if len(panContents) >= 1:
         drawPanButtons()
@@ -802,7 +814,7 @@ def drawPan():
 def drawPanContents():
     if len(panContents) == 0:
         return
-    iconSize = 38
+    iconSize = 30
     gap = 4
     totalW = len(panContents) * (iconSize + gap) - gap
     sx = panX + panW / 2 - totalW / 2
@@ -1145,12 +1157,9 @@ def mousePressed():
 def mouseDragged():
     global wasDragging
     if draggingItem != None:
-        dx = mouseX - dragStartX
-        dy = mouseY - dragStartY
-        if wasDragging or abs(dx) > dragThreshold or abs(dy) > dragThreshold:
-            draggingItem["x"] = mouseX - dragOffsetX
-            draggingItem["y"] = mouseY - dragOffsetY
-            wasDragging = True
+        draggingItem["x"] = mouseX - dragOffsetX
+        draggingItem["y"] = mouseY - dragOffsetY
+        wasDragging = True
 
 def mouseReleased():
     global draggingItem
@@ -1214,7 +1223,7 @@ def setup():
     global leftArrow, rightArrow, breakfastBg, arrowRightX
     global cabinetImg, ingredientImgs
     global fridgeBtn, fridgeBtnY
-    global toasterImg
+    global toasterImg, boardImg, bowlImg, panImg
     size(1510, 915)
 
     leftArrow = loadImage("left_arrow.png")
@@ -1238,6 +1247,18 @@ def setup():
         toasterImg = loadImage("toaster.png")
     except:
         toasterImg = None
+    try:
+        boardImg = loadImage("cutting_board.png")
+    except:
+        boardImg = None
+    try:
+        bowlImg = loadImage("empty_bowl.png")
+    except:
+        bowlImg = None
+    try:
+        panImg = loadImage("empty_pan.png")
+    except:
+        panImg = None
 
     ingredientImgs["flour"] = loadImage("flour.png")
     ingredientImgs["sugar"] = loadImage("sugar.png")
