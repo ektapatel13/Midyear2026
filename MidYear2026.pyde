@@ -160,18 +160,18 @@ ovenRecipes = {"cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake"}
 chopRecipes = {"whole_avocado": "chopped_avocado", "whole_tomato": "chopped_tomato"}
 toasterRecipes = {"bread": "toasted_bread"}
 
-boardX = 545
-boardY = 575
-boardW = 190
-boardH = 180
-bowlX = 765
-bowlY = 570
+boardX = 528
+boardY = 650
+boardW = 230
+boardH = 130
+bowlX = 788
+bowlY = 625
 bowlW = 195
 bowlH = 195
-panX = 540
-panY = 230
-panW = 175
-panH = 140
+panX = 570
+panY = 248
+panW = 120
+panH = 75
 ovenX = 745
 ovenY = 220
 ovenW = 200
@@ -716,10 +716,18 @@ def drawKitchenTools():
 
 def drawBoard():
     noStroke()
-    fill(160, 120, 70)
-    rect(boardX, boardY, boardW, boardH, 12)
-    fill(140, 100, 50)
-    rect(boardX + 8, boardY + 8, boardW - 16, boardH - 16, 8)
+    fill(170, 130, 75)
+    rect(boardX, boardY, boardW, boardH, 6)
+    fill(150, 110, 55)
+    rect(boardX + 6, boardY + 6, boardW - 12, boardH - 12, 4)
+    stroke(135, 95, 45, 60)
+    strokeWeight(1)
+    i = 0
+    while i < 5:
+        lx = boardX + 30 + i * 42
+        line(lx, boardY + 10, lx, boardY + boardH - 10)
+        i += 1
+    noStroke()
 
 def drawBowl():
     noStroke()
@@ -789,12 +797,19 @@ def drawBowlButtons():
 
 def drawPan():
     noStroke()
+    fill(40, 40, 45, 100)
+    ellipse(panX + panW / 2 + 2, panY + panH / 2 + 3, panW + 2, panH + 2)
     fill(80, 80, 90)
     ellipse(panX + panW / 2, panY + panH / 2, panW, panH)
-    fill(55, 55, 65)
-    ellipse(panX + panW / 2, panY + panH / 2, panW - 30, panH - 30)
-    fill(100, 100, 110)
-    rect(panX + panW - 10, panY + panH / 2 - 10, 45, 20, 6)
+    fill(55, 55, 63)
+    ellipse(panX + panW / 2, panY + panH / 2, panW - 18, panH - 12)
+    pushMatrix()
+    translate(panX + panW - 8, panY + panH / 2)
+    rotate(-0.2)
+    fill(95, 95, 105)
+    noStroke()
+    rect(0, -7, 38, 14, 5)
+    popMatrix()
     drawPanContents()
     if len(panContents) >= 1:
         drawPanButtons()
@@ -802,7 +817,7 @@ def drawPan():
 def drawPanContents():
     if len(panContents) == 0:
         return
-    iconSize = 38
+    iconSize = 30
     gap = 4
     totalW = len(panContents) * (iconSize + gap) - gap
     sx = panX + panW / 2 - totalW / 2
