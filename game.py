@@ -994,7 +994,7 @@ def handlePanButtonClick():
                 best = recipe
                 matched = True
                 break
-        if matched:
+        if matched and best is not None:
             panContents = []
             spawnCounterItem(best["output"])
         return True
@@ -1170,7 +1170,7 @@ def handleBowlButtonClick():
                     best = recipe
                     matched = True
                     break
-            if matched:
+            if matched and best is not None:
                 bowlContents = []
                 spawnCounterItem(best["output"])
             return True
