@@ -229,6 +229,16 @@ deleteBtnH = 50
 deleteBtnX = 0
 deleteBtnY = 10
 
+toasterCooking = None
+toasterStartTime = 0
+toasterDuration = 8000
+panCooking = None
+panStartTime = 0
+panDuration = 5000
+ovenCooking = None
+ovenStartTime = 0
+ovenDuration = 10000
+
 def isOverRect(px, py, rx, ry, rw, rh):
     return px >= rx and px <= rx + rw and py >= ry and py <= ry + rh
 
@@ -557,6 +567,7 @@ def drawScorePopups():
 def startGameRound():
     global showCustomer, gameStartTime, money, currentCustomer, orderActive, dialogOpen, dialogStep
     global bowlContents, counterItems, panContents, timerExpired, newCustomerAt
+    global toasterCooking, panCooking, ovenCooking
     showCustomer = False
     orderActive = False
     dialogOpen = False
@@ -569,6 +580,9 @@ def startGameRound():
     counterItems = []
     timerExpired = False
     newCustomerAt = 0
+    toasterCooking = None
+    panCooking = None
+    ovenCooking = None
 
 
 def getTimerFillWidth():
@@ -871,10 +885,15 @@ def drawCounterItems():
 def drawKitchenTools():
     if stations[currentStation] != "kitchen":
         return
+    drawOvenBar()
     drawToaster()
     drawPan()
     drawBoard()
     drawBowl()
+
+def drawOvenBar():
+    if ovenCooking != None:
+        drawCookingBar(ovenX, ovenY + ovenH + 4, ovenW, ovenStartTime, ovenDuration)
 
 def drawBoard():
     if boardImg != None:
@@ -966,6 +985,8 @@ def drawPan():
         ellipse(panX + panW / 2, panY + panH / 2, panW - 18, panH - 12)
         fill(95, 95, 105)
         rect(panX + panW - 8, panY + panH / 2 - 7, 38, 14, 5)
+    if panCooking != None:
+        drawCookingBar(panX, panY + panH + 4, panW, panStartTime, panDuration)
     drawPanContents()
     if len(panContents) >= 1:
         drawPanButtons()
@@ -1061,6 +1082,40 @@ def handlePanButtonClick():
 def drawToaster():
     if toasterImg != None:
         image(toasterImg, toasterX, toasterY, toasterW, toasterH)
+    if toasterCooking != None:
+        drawCookingBar(toasterX, toasterY + toasterH + 4, toasterW, toasterStartTime, toasterDuration)
+
+def drawCookingBar(bx, by, bw, startT, duration):
+    barH = 10
+    elapsed = millis() - startT
+    progress = elapsed / float(duration)
+    if progress > 1.0:
+        progress = 1.0
+    fill(50)
+    noStroke()
+    rect(bx, by, bw, barH, 4)
+    if progress < 0.5:
+        fill(255, 200, 0)
+    elif progress < 0.9:
+        fill(200, 220, 80)
+    else:
+        fill(80, 220, 80)
+    rect(bx, by, bw * progress, barH, 4)
+
+def checkCookingTimers():
+    global toasterCooking, panCooking, ovenCooking
+    if toasterCooking != None:
+        if millis() - toasterStartTime >= toasterDuration:
+            spawnCounterItem(toasterCooking)
+            toasterCooking = None
+    if panCooking != None:
+        if millis() - panStartTime >= panDuration:
+            spawnCounterItem(panCooking)
+            panCooking = None
+    if ovenCooking != None:
+        if millis() - ovenStartTime >= ovenDuration:
+            spawnCounterItem(ovenCooking)
+            ovenCooking = None
 
 def spawnCounterItem(name):
     idx = len(counterItems)
@@ -1086,7 +1141,7 @@ def checkCounterCombination(item1Name, item2Name):
     return None
 
 def handleItemDrop():
-    global counterItems
+    global counterItems, toasterCooking, toasterStartTime, panCooking, panStartTime, ovenCooking, ovenStartTime
     if draggingItem == None:
         return
     item = draggingItem
@@ -1113,27 +1168,42 @@ def handleItemDrop():
         return
     if isOverEllipse(cx, cy, panX + panW / 2, panY + panH / 2, panW / 2 + 20, panH / 2 + 20):
         if name in panRecipes:
-            result = panRecipes[name]
-            counterItems.remove(item)
-            spawnCounterItem(result)
+            if panCooking != None:
+                item["x"] = dragOrigX
+                item["y"] = dragOrigY
+            else:
+                result = panRecipes[name]
+                counterItems.remove(item)
+                panCooking = result
+                panStartTime = millis()
         else:
             counterItems.remove(item)
             panContents.append(name)
         return
     if isOverRect(cx, cy, toasterX - 15, toasterY - 15, toasterW + 30, toasterH + 30):
         if name in toasterRecipes:
-            result = toasterRecipes[name]
-            counterItems.remove(item)
-            spawnCounterItem(result)
+            if toasterCooking != None:
+                item["x"] = dragOrigX
+                item["y"] = dragOrigY
+            else:
+                result = toasterRecipes[name]
+                counterItems.remove(item)
+                toasterCooking = result
+                toasterStartTime = millis()
         else:
             item["x"] = dragOrigX
             item["y"] = dragOrigY
         return
     if isOverRect(cx, cy, ovenX - 15, ovenY - 15, ovenW + 30, ovenH + 30):
         if name in ovenRecipes:
-            result = ovenRecipes[name]
-            counterItems.remove(item)
-            spawnCounterItem(result)
+            if ovenCooking != None:
+                item["x"] = dragOrigX
+                item["y"] = dragOrigY
+            else:
+                result = ovenRecipes[name]
+                counterItems.remove(item)
+                ovenCooking = result
+                ovenStartTime = millis()
         else:
             item["x"] = dragOrigX
             item["y"] = dragOrigY
@@ -1532,6 +1602,7 @@ def drawHome():
 def drawGame():
     global showCustomer, orderActive, currentCustomer, dialogOpen, gameStartTime, newCustomerAt
 
+    checkCookingTimers()
     drawStation()
 
     if debugMouse and stations[currentStation] == "kitchen":
