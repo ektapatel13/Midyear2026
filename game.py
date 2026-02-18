@@ -3,7 +3,6 @@ import random
 import sys
 import os
 
-# --- Pygame Init ---
 pygame.init()
 WIDTH = 1300
 HEIGHT = 760
@@ -12,42 +11,49 @@ pygame.display.set_caption("Kitchen Game")
 clock = pygame.time.Clock()
 FPS = 60
 
-# Alias for Processing compatibility
 width = WIDTH
 height = HEIGHT
 
-# --- Font Cache ---
 _font_cache = {}
+FONT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fonts", "GalaferaMedium-V4xze.ttf")
 def get_font(sz):
     sz = max(1, int(sz))
-    if sz not in _font_cache:
-        _font_cache[sz] = pygame.font.Font(None, sz)
-    return _font_cache[sz]
+    key = (FONT_PATH, sz)
+    if key not in _font_cache:
+        _font_cache[key] = pygame.font.Font(FONT_PATH, sz)
+    return _font_cache[key]
 
-# --- Drawing Helpers ---
 def load_img(name):
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), name)
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", name)
     try:
         return pygame.image.load(path).convert_alpha()
     except:
         return None
 
+_scaled_cache = {}
+
 def draw_img(img, x, y, w=None, h=None):
     if img is None:
         return
     if w is not None and h is not None:
-        scaled = pygame.transform.smoothscale(img, (int(w), int(h)))
+        key = (id(img), int(w), int(h))
+        if key not in _scaled_cache:
+            _scaled_cache[key] = pygame.transform.smoothscale(img, (int(w), int(h)))
+        scaled = _scaled_cache[key]
     else:
         scaled = img
     screen.blit(scaled, (int(x), int(y)))
 
+_alpha_cache = {}
 def draw_img_alpha(img, x, y, w, h, alpha):
     if img is None:
         return
-    scaled = pygame.transform.smoothscale(img, (int(w), int(h)))
-    scaled = scaled.copy()
-    scaled.set_alpha(alpha)
-    screen.blit(scaled, (int(x), int(y)))
+    key = (id(img), int(w), int(h), int(alpha))
+    if key not in _alpha_cache:
+        s = pygame.transform.smoothscale(img, (int(w), int(h))).convert_alpha()
+        s.set_alpha(int(alpha))
+        _alpha_cache[key] = s
+    screen.blit(_alpha_cache[key], (int(x), int(y)))
 
 def draw_rect(x, y, w, h, color, border_radius=0):
     r = max(0, int(border_radius))
@@ -119,7 +125,6 @@ def draw_text_wrapped(txt, x, y, max_w, max_h, sz, color):
 def millis():
     return pygame.time.get_ticks()
 
-# --- Game State ---
 homeBg = None
 title = None
 startbutton = None
@@ -258,6 +263,20 @@ counterMaxPerSide = 4
 counterStartX = 27
 counterStartY = 430
 
+servedItems = []
+servedItemSize = 135
+servedCols = 3
+servedGap = 9
+servedCounterY = 500
+
+plateImg = None
+plateW = 100
+plateH = 100
+
+FINISHED_FOODS = set([
+    "croissant", "pancakes", "egg_sandwhich", "avocado_toast", "panini", "cupcake", "cookie"
+])
+
 draggingItem = None
 dragOffsetX = 0
 dragOffsetY = 0
@@ -269,12 +288,12 @@ dragOrigX = 0
 dragOrigY = 0
 
 counterRecipes = [
-    {"inputs": ["dough_formed", "butter_stick"], "output": "croissant"},
+    {"inputs": ["dough_formed", "butter_stick"], "output": "buttered_dough"},
     {"inputs": ["empty_pancakes", "berries_carton"], "output": "pancakes_nosyrup"},
     {"inputs": ["pancakes_nosyrup", "syrup_bottle"], "output": "pancakes"},
-    {"inputs": ["toasted_bread", "fried_egg"], "output": "toasted_bread_egg"},
-    {"inputs": ["toasted_bread_egg", "cheese"], "output": "toasted_bread_egg_cheese"},
-    {"inputs": ["toasted_bread_egg_cheese", "fried_bacon"], "output": "egg_sandwich"},
+    {"inputs": ["toasted_bread", "fried_egg"], "output": "toastedbread_withegg"},
+    {"inputs": ["toastedbread_withegg", "cheese"], "output": "toastedbread_witheggcheese"},
+    {"inputs": ["toastedbread_witheggcheese", "fried_bacon"], "output": "egg_sandwhich"},
     {"inputs": ["toasted_bread", "chopped_avocado"], "output": "toasted_bread_avocado"},
     {"inputs": ["toasted_bread_avocado", "chopped_tomato"], "output": "toasted_bread_avocado_tomato"},
     {"inputs": ["toasted_bread_avocado_tomato", "fried_bacon"], "output": "avocado_toast"},
@@ -283,8 +302,8 @@ counterRecipes = [
 ]
 
 bowlRecipes = [
-    {"inputs": ["flour", "eggs", "milk", "sugar"], "output": "dough_formed"},
-    {"inputs": ["flour", "eggs", "milk"], "output": "batter_bottle"},
+    {"inputs": ["flour", "cracked_egg", "milk", "sugar"], "output": "dough_formed"},
+    {"inputs": ["flour", "cracked_egg", "milk"], "output": "batter_bottle"},
     {"inputs": ["dough_formed", "chocolate_chips"], "output": "cookiedough_formed"},
     {"inputs": ["dough_formed", "cream"], "output": "cupcake_unbaked"},
 ]
@@ -294,14 +313,14 @@ panMultiRecipes = [
     {"inputs": ["batter_bottle", "berries_carton"], "output": "pancakes_nosyrup"}
 ]
 panContents = []
-ovenRecipes = {"cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake"}
+ovenRecipes = {"cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake", "buttered_dough": "croissant"}
 chopRecipes = {"whole_avocado": "chopped_avocado", "whole_tomato": "chopped_tomato"}
 toasterRecipes = {"bread": "toasted_bread"}
 
 menuNameToItemName = {
     "croissant": "croissant",
     "pancakes": "pancakes",
-    "egg sandwich": "egg_sandwich",
+    "egg sandwich": "egg_sandwhich",
     "avocado toast": "avocado_toast",
     "panini": "panini",
     "cupcake": "cupcake",
@@ -359,12 +378,11 @@ panStartTime = 0
 panDuration = 5000
 ovenCooking = None
 ovenStartTime = 0
-ovenDuration = 10000
+ovenDuration = 5000
 
 mouseX = 0
 mouseY = 0
 
-# --- Helper Functions ---
 def isOverRect(px, py, rx, ry, rw, rh):
     return px >= rx and px <= rx + rw and py >= ry and py <= ry + rh
 
@@ -373,7 +391,6 @@ def isOverEllipse(px, py, cx, cy, rx, ry):
     dy = (py - cy) / float(ry)
     return dx * dx + dy * dy <= 1.0
 
-# --- Menu / Recipe Card ---
 def setupMenuUI():
     global menuThumbX, menuThumbY
     menuThumbX = width - menuThumbW - 25
@@ -384,7 +401,7 @@ def loadMenuAssets():
     menuImg = load_img("menu.png")
     for name, fname in [("croissant", "croissant_instructions.png"),
                         ("pancakes", "pancakes_instructions.png"),
-                        ("egg_sandwich", "eggsandwich_instructions.png"),
+                        ("egg_sandwhich", "eggsandwich_instructions.png"),
                         ("avocado_toast", "avocadotoast_instructions.png"),
                         ("panini", "panini_instructions.png"),
                         ("cupcake", "cupcake_instructions.png"),
@@ -399,7 +416,7 @@ def setupMenuFoodItems():
     pad = 35
     menuFoodItems.append({"name": "croissant", "x": 80 - pad, "y": 190 - pad, "w": 140 + pad * 2, "h": 140 + pad * 2})
     menuFoodItems.append({"name": "pancakes", "x": 300 - pad, "y": 190 - pad, "w": 140 + pad * 2, "h": 140 + pad * 2})
-    menuFoodItems.append({"name": "egg_sandwich", "x": 520 - pad, "y": 190 - pad, "w": 140 + pad * 2, "h": 140 + pad * 2})
+    menuFoodItems.append({"name": "egg_sandwhich", "x": 520 - pad, "y": 190 - pad, "w": 140 + pad * 2, "h": 140 + pad * 2})
     menuFoodItems.append({"name": "avocado_toast", "x": 150 - pad, "y": 400 - pad, "w": 140 + pad * 2, "h": 140 + pad * 2})
     menuFoodItems.append({"name": "panini", "x": 500 - pad, "y": 400 - pad, "w": 140 + pad * 2, "h": 140 + pad * 2})
     menuFoodItems.append({"name": "cupcake", "x": 180 - pad, "y": 590 - pad, "w": 120 + pad * 2, "h": 120 + pad * 2})
@@ -480,7 +497,6 @@ def handleMenuClick():
         return True
     return False
 
-# --- How To Play ---
 def drawHowToPlay():
     draw_rect(0, 0, width, height, (0, 0, 0, 180))
     hw = 800
@@ -505,7 +521,6 @@ def handleHowToPlayClick():
             return True
     return False
 
-# --- Order System ---
 def buildOrderCounts():
     n = random.randint(1, 2)
     counts = {}
@@ -607,11 +622,12 @@ def drawScorePopups():
     for p in to_remove:
         scorePopups.remove(p)
 
-# --- Game Round ---
 def startGameRound():
     global showCustomer, gameStartTime, money, currentCustomer, orderActive, dialogOpen, dialogStep
     global bowlContents, counterItems, panContents, timerExpired, newCustomerAt
     global toasterCooking, panCooking, ovenCooking
+    global servedItems
+    servedItems = []
     showCustomer = False
     orderActive = False
     dialogOpen = False
@@ -649,29 +665,32 @@ def resetForNextCustomer():
     gameStartTime = millis() + newCustomerDelay
 
 def serveOrder():
-    global money, counterItems, scorePopups
+    global money, servedItems, scorePopups
+
     needed = {}
     for menuName in currentOrderCounts:
         itemName = menuNameToItemName.get(menuName, menuName.replace(" ", "_"))
         needed[itemName] = currentOrderCounts[menuName]
-    tempCounter = [item["name"] for item in counterItems]
+
+    tempServedNames = [item["name"] for item in servedItems]
+
     allFound = True
-    for itemName in needed:
-        count = needed[itemName]
-        found = tempCounter.count(itemName)
-        if found < count:
+    for itemName, count in needed.items():
+        if tempServedNames.count(itemName) < count:
             allFound = False
             break
+
     if allFound:
         tempNeeded = dict(needed)
-        newCounterItems = []
-        for item in counterItems:
+        newServedItems = []
+        for item in servedItems:
             n = item["name"]
             if n in tempNeeded and tempNeeded[n] > 0:
                 tempNeeded[n] -= 1
             else:
-                newCounterItems.append(item)
-        counterItems = newCounterItems
+                newServedItems.append(item)
+        servedItems = newServedItems
+
         totalDishes = sum(needed.values())
         earned = orderValue * totalDishes
         money += earned
@@ -679,10 +698,8 @@ def serveOrder():
         resetForNextCustomer()
     else:
         missing = []
-        tempCounter2 = [item["name"] for item in counterItems]
-        for itemName in needed:
-            count = needed[itemName]
-            have = tempCounter2.count(itemName)
+        for itemName, count in needed.items():
+            have = tempServedNames.count(itemName)
             short = count - have
             if short > 0:
                 label = itemName.replace("_", " ")
@@ -747,14 +764,36 @@ def drawTimerBar(charX, charY, charW):
     if fillWidth > 0:
         draw_rect(barX, barY, fillWidth, barHeight, c, border_radius=6)
 
-# --- Station Drawing ---
+def drawApplianceTimerBar(bx, by, bw, startT, duration):
+    barHeight = 18
+    draw_rect(bx, by, bw, barHeight, (50, 50, 50), border_radius=6)
+    draw_rect_outline(bx, by, bw, barHeight, (0, 0, 0), 2, border_radius=6)
+
+    elapsed = millis() - startT
+    progress = elapsed / float(duration)
+    if progress < 0:
+        progress = 0
+    if progress > 1:
+        progress = 1
+
+    fillWidth = bw * progress
+
+    if progress < 0.5:
+        c = (100, 200, 100)
+    elif progress < 0.75:
+        c = (255, 200, 0)
+    else:
+        c = (255, 100, 100)
+
+    if fillWidth > 0:
+        draw_rect(bx, by, fillWidth, barHeight, c, border_radius=6)
+
 def drawStation():
     if stations[currentStation] == "order":
         draw_img(mainBg, 0, 0, width, height)
     elif stations[currentStation] == "kitchen":
         draw_img(breakfastBg, 0, 0, width, height)
 
-# --- Fridge ---
 def drawFridgeButton():
     if stations[currentStation] == "kitchen" and fridgeBtn is not None:
         draw_img(fridgeBtn, fridgeBtnX, fridgeBtnY, fridgeBtnW, fridgeBtnH)
@@ -800,10 +839,27 @@ def drawFridgeOverlay():
                     draw_img(img, x + pad, y + pad, fridgeBtnSize - pad * 2, fridgeBtnSize - pad * 2)
             else:
                 draw_text(name, x + fridgeBtnSize / 2, y + fridgeBtnSize / 2, 13, (80, 80, 80), "center", "center")
-    # Close button
     bx = width - 60
     by = 20
     drawExitButton(bx, by, 42)
+
+def handleFinishedFoodClickToServe():
+    global counterItems, servedItems
+    if currentScreen != "game" or stations[currentStation] != "kitchen":
+        return False
+    if fridgeOpen or cabinetOpen or menuOpen or recipeCardOpen:
+        return False
+
+    for i in range(len(counterItems) - 1, -1, -1):
+        item = counterItems[i]
+        if isOverRect(mouseX, mouseY, item["x"], item["y"], counterItemSize, counterItemSize):
+            if item["name"] in FINISHED_FOODS:
+                counterItems.pop(i)
+                reflowCounterItems()
+                servedItems.append({"name": item["name"]})
+                return True
+            return False
+    return False
 
 def handleFridgeOverlayClick():
     global fridgeOpen, counterItems
@@ -828,7 +884,6 @@ def handleFridgeOverlayClick():
                 return True
     return True
 
-# --- Counter Items ---
 def getCounterItemPos(index):
     side = index // counterMaxPerSide
     localIdx = index % counterMaxPerSide
@@ -841,6 +896,43 @@ def getCounterItemPos(index):
         x = rightStartX + col * (counterItemSize + counterColGap)
     y = counterStartY + row * (counterItemSize + counterRowGap)
     return x, y
+
+def getServedItemPos(index):
+    totalW = servedCols * servedItemSize + (servedCols - 1) * servedGap
+    startX = width / 2 - totalW / 2
+    col = index % servedCols
+    row = index // servedCols
+    x = startX + col * (servedItemSize + servedGap)
+    y = servedCounterY + row * (servedItemSize + servedGap)
+    return x, y
+
+def drawServedItems():
+    if stations[currentStation] != "order":
+        return
+
+    for i, item in enumerate(servedItems):
+        x, y = getServedItemPos(i)
+
+        pcx = x + servedItemSize / 2
+        pcy = y + servedItemSize / 2 + 10
+        px = pcx - plateW / 2
+        py = pcy - plateH / 2
+
+        if plateImg is not None:
+            draw_img(plateImg, px, py, plateW, plateH)
+
+        name = item["name"]
+        img = ingredientImgs.get(name, None)
+
+        foodW = int(plateW * 0.72)
+        foodH = int(plateH * 0.72)
+        fx = pcx - foodW / 2
+        fy = pcy - foodH / 2 - 10
+
+        if img is not None:
+            draw_img(img, fx, fy, foodW, foodH)
+        else:
+            draw_text(name, pcx, pcy, 14, (60, 60, 60), "center", "center")
 
 def counterHasItem(name):
     for item in counterItems:
@@ -862,7 +954,10 @@ def drawCounterItems():
             draw_rect(x, y, counterItemSize, counterItemSize, (255, 200, 210), border_radius=10)
             draw_text(name, x + counterItemSize / 2, y + counterItemSize / 2, 12, (80, 80, 80), "center", "center")
 
-# --- Kitchen Tools ---
+def reflowCounterItems():
+    for i, it in enumerate(counterItems):
+        it["x"], it["y"] = getCounterItemPos(i)
+
 def drawKitchenTools():
     if stations[currentStation] != "kitchen":
         return
@@ -934,7 +1029,8 @@ def drawPan():
         draw_ellipse(panX + panW / 2, panY + panH / 2, panW - 18, panH - 12, (55, 55, 63))
         draw_rect(panX + panW - 8, panY + panH / 2 - 7, 38, 14, (95, 95, 105), border_radius=5)
     if panCooking is not None:
-        drawCookingBar(panX, panY + panH + 4, panW, panStartTime, panDuration)
+        drawApplianceTimerBar(panX, panY + panH + 8, panW, panStartTime, panDuration)
+
     drawPanContents()
     if len(panContents) >= 1:
         drawPanButtons()
@@ -994,10 +1090,14 @@ def handlePanButtonClick():
                 best = recipe
                 matched = True
                 break
+        global panCooking, panStartTime
         if matched and best is not None:
             panContents = []
-            spawnCounterItem(best["output"])
+            if panCooking is None:
+                panCooking = best["output"]
+                panStartTime = millis()
         return True
+
     cx = panX + panW / 2 + 4
     if isOverRect(mouseX, mouseY, cx, by, bw, bh):
         for name in panContents:
@@ -1043,11 +1143,12 @@ def checkCookingTimers():
             spawnCounterItem(ovenCooking)
             ovenCooking = None
 
-# --- Counter Item Helpers ---
 def spawnCounterItem(name):
-    idx = len(counterItems)
-    px, py = getCounterItemPos(idx)
-    counterItems.append({"name": name, "x": px, "y": py})
+    counterItems.append({"name": name, "x": 0, "y": 0})
+    reflowCounterItems()
+
+def spawnItemAt(name, x, y):
+    counterItems.append({"name": name, "x": x, "y": y})
 
 def findItemAtPosition(x, y, excludeItem):
     for item in counterItems:
@@ -1075,6 +1176,7 @@ def handleItemDrop():
 
     if isOverRect(cx, cy, deleteBtnX, deleteBtnY, deleteBtnW, deleteBtnH):
         counterItems.remove(item)
+        reflowCounterItems()
         return
 
     overlappingItem = findItemAtPosition(cx, cy, item)
@@ -1088,8 +1190,12 @@ def handleItemDrop():
 
     if isOverEllipse(cx, cy, bowlX + bowlW / 2, bowlY + bowlH / 2, bowlW / 2 + 30, bowlH / 2 + 30):
         counterItems.remove(item)
-        bowlContents.append(name)
+        if name == "eggs":
+            bowlContents.append("cracked_egg")
+        else:
+            bowlContents.append(name)
         return
+    
     if isOverEllipse(cx, cy, panX + panW / 2, panY + panH / 2, panW / 2 + 20, panH / 2 + 20):
         if name in panRecipes:
             if panCooking is not None:
@@ -1136,7 +1242,9 @@ def handleItemDrop():
         if name in chopRecipes:
             result = chopRecipes[name]
             counterItems.remove(item)
-            spawnCounterItem(result)
+            bx = boardX + boardW / 2 - counterItemSize / 2
+            by = boardY + boardH / 2 - counterItemSize / 2
+            spawnItemAt(result, bx, by)
         else:
             item["x"] = dragOrigX
             item["y"] = dragOrigY
@@ -1189,7 +1297,6 @@ def handleBowlButtonClick():
             return True
     return False
 
-# --- Arrows ---
 def drawArrows():
     if currentStation > 0:
         draw_img(leftArrow, arrowLeftX, arrowY, arrowW, arrowH)
@@ -1208,7 +1315,6 @@ def handleArrowClick():
             return True
     return False
 
-# --- Cabinet ---
 def drawCabinetOverlay():
     global overlayX, overlayY
     if not cabinetOpen:
@@ -1221,7 +1327,6 @@ def drawCabinetOverlay():
     else:
         draw_rect(overlayX, overlayY, overlayW, overlayH, (255, 255, 255), border_radius=20)
     drawCabinetItems(openCabinetKey)
-    # Close button
     bx = overlayX + overlayW - 55
     by = overlayY + 15
     drawExitButton(bx, by, 40)
@@ -1270,14 +1375,12 @@ def handleKitchenCabinetClick():
             return True
     return False
 
-# --- Delete Button ---
 def drawDeleteButton():
     if stations[currentStation] != "kitchen":
         return
     if deleteBtn is not None:
         draw_img(deleteBtn, deleteBtnX, deleteBtnY, deleteBtnW, deleteBtnH)
 
-# --- Event Handlers ---
 def on_mouse_pressed(mx, my):
     global draggingItem, dragOffsetX, dragOffsetY, wasDragging, dragStartX, dragStartY, dragOrigX, dragOrigY
     wasDragging = False
@@ -1352,6 +1455,8 @@ def on_mouse_clicked():
             if handleServeButtonClick():
                 return
         if stations[currentStation] == "kitchen":
+            if handleFinishedFoodClickToServe():
+                return
             if handlePanButtonClick():
                 return
             if handleBowlButtonClick():
@@ -1369,7 +1474,6 @@ def on_key_pressed(key):
     if key == pygame.K_d:
         debugMouse = not debugMouse
 
-# --- Setup ---
 def setup():
     global homeBg, title, startbutton, howtoplay, mainBg
     global howtoplayImg
@@ -1378,6 +1482,7 @@ def setup():
     global fridgeBtn, fridgeBtnY
     global toasterImg, boardImg, bowlImg, panImg
     global deleteBtn, deleteBtnX
+    global plateImg
 
     leftArrow = load_img("left_arrow.png")
     rightArrow = load_img("right_arrow.png")
@@ -1403,6 +1508,8 @@ def setup():
     deleteBtn = load_img("delete_button.png")
     deleteBtnX = width - deleteBtnW - 10
 
+    plateImg = load_img("plate.png")
+
     ingredientImgs["flour"] = load_img("flour.png")
     ingredientImgs["sugar"] = load_img("sugar.png")
     ingredientImgs["eggs"] = load_img("eggs.png")
@@ -1424,10 +1531,10 @@ def setup():
                      "fried_egg", "fried_bacon", "fried_deli_meat",
                      "toasted_bread", "chopped_avocado", "chopped_tomato",
                      "empty_pancakes", "pancakes_nosyrup", "pancakes",
-                     "toasted_bread_egg", "toasted_bread_egg_cheese", "egg_sandwich",
+                     "toastedbread_withegg", "toastedbread_witheggcheese", "egg_sandwhich",
                      "toasted_bread_avocado", "toasted_bread_avocado_tomato", "avocado_toast",
                      "toasted_bread_deli", "panini",
-                     "cupcake", "cookie", "croissant"]
+                     "cupcake", "cookie", "croissant", "buttered_dough", "cracked_egg"]
     for pn in productNames:
         img = load_img(pn + ".png")
         if img is not None:
@@ -1444,7 +1551,6 @@ def setup():
     loadMenuAssets()
     setupMenuFoodItems()
 
-# --- Draw Screens ---
 def drawHome():
     global startX, startY, startW, startH, howX, howY, howW, howH
     draw_img(homeBg, 0, 0, width, height)
@@ -1524,6 +1630,7 @@ def drawGame():
     drawCounterItems()
     drawMoney()
     drawScorePopups()
+    drawServedItems()
     drawMenuUI()
     drawFridgeButton()
     drawArrows()
@@ -1541,7 +1648,6 @@ def draw_frame():
     if recipeCardOpen:
         drawRecipeCard()
 
-# --- Main Loop ---
 def main():
     global mouseX, mouseY
 
