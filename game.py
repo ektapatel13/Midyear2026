@@ -291,14 +291,20 @@ counterRecipes = [
     {"inputs": ["dough_formed", "butter_stick"], "output": "buttered_dough"},
     {"inputs": ["empty_pancakes", "berries_carton"], "output": "pancakes_nosyrup"},
     {"inputs": ["pancakes_nosyrup", "syrup_bottle"], "output": "pancakes"},
+
     {"inputs": ["toasted_bread", "fried_egg"], "output": "toastedbread_withegg"},
     {"inputs": ["toastedbread_withegg", "cheese"], "output": "toastedbread_witheggcheese"},
     {"inputs": ["toastedbread_witheggcheese", "fried_bacon"], "output": "egg_sandwhich"},
-    {"inputs": ["toasted_bread", "chopped_avocado"], "output": "toasted_bread_avocado"},
-    {"inputs": ["toasted_bread_avocado", "chopped_tomato"], "output": "toasted_bread_avocado_tomato"},
-    {"inputs": ["toasted_bread_avocado_tomato", "fried_bacon"], "output": "avocado_toast"},
-    {"inputs": ["toasted_bread", "fried_deli_meat"], "output": "toasted_bread_deli"},
-    {"inputs": ["toasted_bread_deli", "cheese"], "output": "panini"},
+
+    {"inputs": ["toasted_bread", "chopped_avocado"], "output": "toastedbread_withavocado"},
+    {"inputs": ["toastedbread_withavocado", "chopped_tomato"], "output": "toastedbread_withavocadotomato"},
+    {"inputs": ["toastedbread_withavocadotomato", "fried_bacon"], "output": "avocado_toast"},
+
+    {"inputs": ["toasted_bread", "deli_meat"], "output": "toastedbread_withdelimeat"},
+    {"inputs": ["toastedbread_withdelimeat", "cheese"], "output": "panini"},
+
+    {"inputs": ["dough_formed", "chocolate_chips"], "output": "dough_withchocochips"},
+    {"inputs": ["cupcake_noicing", "cream"], "output": "cupcake"},
 ]
 
 bowlRecipes = [
@@ -307,13 +313,17 @@ bowlRecipes = [
     {"inputs": ["dough_formed", "chocolate_chips"], "output": "cookiedough_formed"},
     {"inputs": ["dough_formed", "cream"], "output": "cupcake_unbaked"},
 ]
-panRecipes = {"eggs": "fried_egg", "raw_bacon": "fried_bacon", "deli_meat": "fried_deli_meat"}
+panRecipes = {"eggs": "fried_egg", "raw_bacon": "fried_bacon"}
 panMultiRecipes = [
     {"inputs": ["batter_bottle"], "output": "empty_pancakes"},
     {"inputs": ["batter_bottle", "berries_carton"], "output": "pancakes_nosyrup"}
 ]
 panContents = []
-ovenRecipes = {"cookiedough_formed": "cookie", "cupcake_unbaked": "cupcake", "buttered_dough": "croissant"}
+ovenRecipes = {
+    "buttered_dough": "croissant",
+    "dough_withchocochips": "cookie",
+    "dough_formed": "cupcake_noicing",
+}
 chopRecipes = {"whole_avocado": "chopped_avocado", "whole_tomato": "chopped_tomato"}
 toasterRecipes = {"bread": "toasted_bread"}
 
@@ -1532,9 +1542,10 @@ def setup():
                      "toasted_bread", "chopped_avocado", "chopped_tomato",
                      "empty_pancakes", "pancakes_nosyrup", "pancakes",
                      "toastedbread_withegg", "toastedbread_witheggcheese", "egg_sandwhich",
-                     "toasted_bread_avocado", "toasted_bread_avocado_tomato", "avocado_toast",
-                     "toasted_bread_deli", "panini",
-                     "cupcake", "cookie", "croissant", "buttered_dough", "cracked_egg"]
+                     "toastedbread_withavocado", "toastedbread_withavocadotomato", "avocado_toast",
+                     "toastedbread_withdelimeat", "panini",
+                     "cupcake", "cookie", "croissant", "buttered_dough", "cracked_egg", "dough_withchocochips",
+                     "cupcake_noicing"]
     for pn in productNames:
         img = load_img(pn + ".png")
         if img is not None:
