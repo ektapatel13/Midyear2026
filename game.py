@@ -704,7 +704,7 @@ def getTimerFillWidth():
 
 def resetForNextCustomer():
     global showCustomer, orderActive, dialogOpen, dialogStep, timerExpired
-    global newCustomerAt, currentCustomer, gameStartTime, platedItems
+    global newCustomerAt, currentCustomer, gameStartTime, platedItems, servedItems
     showCustomer = False
     orderActive = False
     dialogOpen = False
@@ -712,6 +712,7 @@ def resetForNextCustomer():
     timerExpired = False
     currentCustomer = None
     platedItems = []
+    servedItems = []
     newCustomerAt = millis() + newCustomerDelay
     gameStartTime = millis() + newCustomerDelay
 
@@ -777,7 +778,7 @@ def stopAllCookingSounds():
 def checkTimerExpired():
     global money, scorePopups, timerExpired
     global counterItems, bowlContents, panContents
-    global toasterCooking, panCooking, ovenCooking, platedItems
+    global toasterCooking, panCooking, ovenCooking, platedItems, servedItems
     if not orderActive or timerExpired or dialogOpen:
         return
     if getTimerFillWidth() <= 0:
@@ -791,76 +792,29 @@ def checkTimerExpired():
         bowlContents = []
         panContents = []
         platedItems = []
+        servedItems = []
         toasterCooking = None
         panCooking = None
         ovenCooking = None
         stopAllCookingSounds()
         resetForNextCustomer()
 
-finishedFoodNames = [
-    "croissant", "pancakes", "egg_sandwich", "avocado_toast",
-    "panini", "cupcake", "cookie"
-]
-
-def getPlatedItems():
-    plated = []
-    for item in counterItems:
-        if item["name"] in finishedFoodNames:
-            plated.append(item)
-    return plated
-
 def drawPlatedItems():
-    if stations[currentStation] != "order":
-        return
-    if not orderActive or not showCustomer:
-        return
-    plated = getPlatedItems()
-    if len(plated) == 0:
-        return
-    plateSize = 90
-    gap = 15
-    totalW = len(plated) * (plateSize + gap) - gap
-    startX = width / 2 - totalW / 2
-    startY = height - 210
-    # Label
-    draw_text("Plated:", width / 2, startY - 22, 18, (255, 255, 255), "center", "center")
-    for i, item in enumerate(plated):
-        px = startX + i * (plateSize + gap)
-        py = startY
-        draw_rect(px - 5, py - 5, plateSize + 10, plateSize + 10, (255, 255, 255, 200), border_radius=12)
-        img = ingredientImgs.get(item["name"], None)
-        if img is not None:
-            draw_img(img, px, py, plateSize, plateSize)
-        else:
-            draw_rect(px, py, plateSize, plateSize, (255, 200, 210), border_radius=8)
-            draw_text(item["name"].replace("_", " "), px + plateSize / 2, py + plateSize / 2, 11, (80, 80, 80), "center", "center")
-        # Red X button in top-right corner
-        xSize = 24
-        xX = px + plateSize - xSize / 2
-        xY = py - xSize / 2
-        draw_rect(xX - xSize / 2, xY - xSize / 2, xSize, xSize, (255, 60, 60), border_radius=12)
-        draw_text("X", xX, xY, 16, (255, 255, 255), "center", "center")
+    pass
 
 def handlePlatedItemClick():
-    global counterItems
+    global servedItems
     if stations[currentStation] != "order":
         return False
     if not orderActive or not showCustomer:
         return False
-    plated = getPlatedItems()
-    if len(plated) == 0:
+    if len(servedItems) == 0:
         return False
-    plateSize = 90
-    gap = 15
-    totalW = len(plated) * (plateSize + gap) - gap
-    startX = width / 2 - totalW / 2
-    startY = height - 210
-    for i, item in enumerate(plated):
-        px = startX + i * (plateSize + gap)
-        py = startY
-        if isOverRect(mouseX, mouseY, px - 5, py - 5, plateSize + 10, plateSize + 10):
-            counterItems.remove(item)
-            scorePopups.append({'text': 'Tossed ' + item["name"].replace("_", " ") + '!', 'x': width / 2, 'y': 420, 'color': [255, 150, 50], 'time': millis()})
+    for i in range(len(servedItems) - 1, -1, -1):
+        x, y = getServedItemPos(i)
+        if isOverRect(mouseX, mouseY, x, y, servedItemSize, servedItemSize):
+            tossed = servedItems.pop(i)
+            scorePopups.append({'text': 'Tossed ' + tossed["name"].replace("_", " ") + '!', 'x': width / 2, 'y': 420, 'color': [255, 150, 50], 'time': millis()})
             return True
     return False
 
@@ -1076,6 +1030,13 @@ def drawServedItems():
             draw_img(img, fx, fy, foodW, foodH)
         else:
             draw_text(name, pcx, pcy, 14, (60, 60, 60), "center", "center")
+
+        # Red X button in top-right corner to toss item
+        xSize = 22
+        xBtnX = x + servedItemSize - xSize + 2
+        xBtnY = y - 2
+        draw_rect(xBtnX, xBtnY, xSize, xSize, (255, 60, 60), border_radius=11)
+        draw_text("X", xBtnX + xSize / 2, xBtnY + xSize / 2, 14, (255, 255, 255), "center", "center")
 
 def counterHasItem(name):
     for item in counterItems:
