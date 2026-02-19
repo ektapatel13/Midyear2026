@@ -532,7 +532,7 @@ def handleHowToPlayClick():
     return False
 
 def buildOrderCounts():
-    n = random.randint(1, 2)
+    n = random.randint(1, 4)
     counts = {}
     kinds = {}
     picked = []
@@ -657,7 +657,7 @@ def startGameRound():
 def getTimerFillWidth():
     barWidth = 220
     timeElapsed = millis() - gameStartTime
-    fw = barWidth - (timeElapsed / 600.0)
+    fw = barWidth - (timeElapsed / 400.0)
     if fw < 0:
         fw = 0
     return fw
@@ -1553,10 +1553,16 @@ def setup():
 
     c1 = load_img("character_1_happy.png")
     c2 = load_img("character_2_happy.png")
-    if c1:
-        customers.append(c1)
-    if c2:
-        customers.append(c2)
+    c3 = load_img("character_3_happy.png")
+    c4 = load_img("character_4_happy.png")
+    c5 = load_img("character_5_happy.png")
+    c6 = load_img("character_6_happy.png")
+    c7 = load_img("character_7_happy.png")
+
+    for i in range(1, 8):
+        img = load_img(f"character_{i}_happy.png")
+        if img is not None:
+            customers.append(img)
 
     setupMenuUI()
     loadMenuAssets()
@@ -1595,9 +1601,24 @@ def drawHome():
             howY = height - howH - 20
         draw_img(howtoplay, howX, howY, howW, howH)
 
+def pickRandomCustomer():
+    global lastIndex
+    if len(customers) == 0:
+        return None
+    if len(customers) == 1:
+        lastIndex = 0
+        return customers[0]
+
+    idx = random.randint(0, len(customers) - 1)
+    while idx == lastIndex:
+        idx = random.randint(0, len(customers) - 1)
+
+    lastIndex = idx
+    return customers[idx]
+
 def drawGame():
     global showCustomer, orderActive, currentCustomer, dialogOpen, gameStartTime, newCustomerAt
-
+    global lastIndex
     checkCookingTimers()
     drawStation()
 
@@ -1609,18 +1630,17 @@ def drawGame():
         gameStartTime = millis()
         showCustomer = True
         orderActive = True
-        if currentCustomer is None and len(customers) > 0:
-            currentCustomer = customers[random.randint(0, len(customers) - 1)]
+        if currentCustomer is None:
+            currentCustomer = pickRandomCustomer()
         startCustomerDialog()
 
     if stations[currentStation] == "order":
         if not showCustomer and newCustomerAt == 0 and millis() - gameStartTime >= 1500:
             showCustomer = True
             orderActive = True
-            if currentCustomer is None and len(customers) > 0:
-                currentCustomer = customers[random.randint(0, len(customers) - 1)]
+            if currentCustomer is None:
+                currentCustomer = pickRandomCustomer()
             startCustomerDialog()
-
     checkTimerExpired()
 
     if stations[currentStation] == "order" and showCustomer and currentCustomer is not None:
