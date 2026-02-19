@@ -13,7 +13,7 @@ clock = pygame.time.Clock()
 FPS = 60
 
 def load_sound(name):
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), name)
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", name)
     try:
         return pygame.mixer.Sound(path)
     except:
@@ -30,7 +30,6 @@ toasterSoundPlaying = False
 ovenSoundPlaying = False
 panSoundPlaying = False
 
-# Alias for Processing compatibility
 width = WIDTH
 height = HEIGHT
 
@@ -777,7 +776,7 @@ def stopAllCookingSounds():
 def checkTimerExpired():
     global money, scorePopups, timerExpired
     global counterItems, bowlContents, panContents
-    global toasterCooking, panCooking, ovenCooking, platedItems
+    global toasterCooking, panCooking, ovenCooking, platedItems, servedItems
     if not orderActive or timerExpired or dialogOpen:
         return
     if getTimerFillWidth() <= 0:
@@ -786,11 +785,13 @@ def checkTimerExpired():
         money -= penalty
         if alarmSound is not None:
             alarmSound.play()
+            pygame.time.set_timer(pygame.USEREVENT + 1, 1200)
         scorePopups.append({'text': '-$' + str(penalty) + ' Too slow!', 'x': width / 2, 'y': 380, 'color': [255, 80, 80], 'time': millis()})
         counterItems = []
         bowlContents = []
         panContents = []
         platedItems = []
+        servedItems = []
         toasterCooking = None
         panCooking = None
         ovenCooking = None
@@ -835,25 +836,22 @@ def drawPlatedItems():
         draw_text("x", px + plateSize - 8, py - 2, 18, (255, 60, 60), "center", "center")
 
 def handlePlatedItemClick():
-    global counterItems
+    global servedItems
+
     if stations[currentStation] != "order":
         return False
     if not orderActive or not showCustomer:
         return False
-    plated = getPlatedItems()
-    if len(plated) == 0:
-        return False
-    plateSize = 100
-    gap = 15
-    totalW = len(plated) * (plateSize + gap) - gap
-    startX = width / 2 - totalW / 2
-    startY = height - 170
-    for i, item in enumerate(plated):
-        px = startX + i * (plateSize + gap)
-        py = startY
-        if isOverRect(mouseX, mouseY, px - 5, py - 5, plateSize + 10, plateSize + 10):
-            counterItems.remove(item)
-            scorePopups.append({'text': 'Tossed ' + item["name"].replace("_", " ") + '!', 'x': width / 2, 'y': 420, 'color': [255, 150, 50], 'time': millis()})
+
+    for i in range(len(servedItems) - 1, -1, -1):
+        x, y = getServedItemPos(i)
+
+        pcx = x + servedItemSize / 2
+        pcy = y + servedItemSize / 2 + 10
+        px = pcx - plateW / 2
+        py = pcy - plateH / 2
+        if isOverRect(mouseX, mouseY, px, py, plateW, plateH):
+            servedItems.pop(i)
             return True
     return False
 
@@ -1652,6 +1650,7 @@ def setup():
     global toasterImg, boardImg, bowlImg, panImg
     global deleteBtn, deleteBtnX
     global plateImg
+    global toasterSound, ovenSound, panSound, backgroundMusic, kachingSound, alarmSound
 
     leftArrow = load_img("left_arrow.png")
     rightArrow = load_img("right_arrow.png")
@@ -1664,6 +1663,13 @@ def setup():
     howtoplay = load_img("how_to_play_button.png")
     howtoplayImg = load_img("how_to_play.png")
     mainBg = load_img("main_background.png")
+
+    toasterSound = load_sound("toaster_sound.wav")
+    ovenSound = load_sound("oven_sound.wav")
+    panSound = load_sound("pan_sound.wav")
+    backgroundMusic = load_sound("background_music.wav")
+    kachingSound = load_sound("kaching_sound.wav")
+    alarmSound = load_sound("alarm_sound.wav")
 
     cabinetImg = load_img("cabinet_expanded.png")
 
@@ -1722,13 +1728,12 @@ def setup():
         if img is not None:
             customers.append(img)
 
-    global toasterSound, ovenSound, panSound, backgroundMusic, kachingSound, alarmSound
-    toasterSound = load_sound("toaster_sound.wav")
-    ovenSound = load_sound("oven_sound.wav")
-    panSound = load_sound("pan_sound.wav")
-    backgroundMusic = load_sound("background_music.wav")
-    kachingSound = load_sound("kaching_sound.wav")
-    alarmSound = load_sound("alarm_sound.wav")
+    toasterSound = load_sound("toaster_ding.mp3")
+    ovenSound = load_sound("oven_ding.mp3")
+    panSound = load_sound("bacon_sizzle.mp3")
+    backgroundMusic = load_sound("cafe_music.mp3")
+    kachingSound = load_sound("successful_serve.mp3")
+    alarmSound = load_sound("timer_alert.mp3")
 
     if backgroundMusic is not None:
         backgroundMusic.play(loops=-1)
