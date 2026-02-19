@@ -750,18 +750,22 @@ def drawPlatedItems():
     plated = getPlatedItems()
     if len(plated) == 0:
         return
-    plateSize = 100
+    plateSize = 90
     gap = 15
     totalW = len(plated) * (plateSize + gap) - gap
     sx = width / 2 - totalW / 2
-    sy = height - 170
+    sy = height - 210
+    fill(255)
+    textAlign(CENTER, CENTER)
+    textSize(18)
+    text("Plated:", width / 2, sy - 22)
     i = 0
     while i < len(plated):
         item = plated[i]
         px = sx + i * (plateSize + gap)
         py = sy
         noStroke()
-        fill(255, 255, 255, 180)
+        fill(255, 255, 255, 200)
         rect(px - 5, py - 5, plateSize + 10, plateSize + 10, 12)
         img = ingredientImgs.get(item["name"], None)
         if img != None:
@@ -772,11 +776,17 @@ def drawPlatedItems():
             fill(80)
             textAlign(CENTER, CENTER)
             textSize(11)
-            text(item["name"], px + plateSize / 2, py + plateSize / 2)
+            text(item["name"].replace("_", " "), px + plateSize / 2, py + plateSize / 2)
+        xSize = 24
+        xX = px + plateSize - xSize / 2
+        xY = py - xSize / 2
+        noStroke()
         fill(255, 60, 60)
+        rect(xX - xSize / 2, xY - xSize / 2, xSize, xSize, 12)
+        fill(255)
         textAlign(CENTER, CENTER)
-        textSize(18)
-        text("x", px + plateSize - 8, py - 2)
+        textSize(16)
+        text("X", xX, xY)
         i += 1
 
 def handlePlatedItemClick():
@@ -788,11 +798,11 @@ def handlePlatedItemClick():
     plated = getPlatedItems()
     if len(plated) == 0:
         return False
-    plateSize = 100
+    plateSize = 90
     gap = 15
     totalW = len(plated) * (plateSize + gap) - gap
     sx = width / 2 - totalW / 2
-    sy = height - 170
+    sy = height - 210
     i = 0
     while i < len(plated):
         item = plated[i]

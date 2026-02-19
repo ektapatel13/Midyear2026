@@ -817,22 +817,29 @@ def drawPlatedItems():
     plated = getPlatedItems()
     if len(plated) == 0:
         return
-    plateSize = 100
+    plateSize = 90
     gap = 15
     totalW = len(plated) * (plateSize + gap) - gap
     startX = width / 2 - totalW / 2
-    startY = height - 170
+    startY = height - 210
+    # Label
+    draw_text("Plated:", width / 2, startY - 22, 18, (255, 255, 255), "center", "center")
     for i, item in enumerate(plated):
         px = startX + i * (plateSize + gap)
         py = startY
-        draw_rect(px - 5, py - 5, plateSize + 10, plateSize + 10, (255, 255, 255, 180), border_radius=12)
+        draw_rect(px - 5, py - 5, plateSize + 10, plateSize + 10, (255, 255, 255, 200), border_radius=12)
         img = ingredientImgs.get(item["name"], None)
         if img is not None:
             draw_img(img, px, py, plateSize, plateSize)
         else:
             draw_rect(px, py, plateSize, plateSize, (255, 200, 210), border_radius=8)
-            draw_text(item["name"], px + plateSize / 2, py + plateSize / 2, 11, (80, 80, 80), "center", "center")
-        draw_text("x", px + plateSize - 8, py - 2, 18, (255, 60, 60), "center", "center")
+            draw_text(item["name"].replace("_", " "), px + plateSize / 2, py + plateSize / 2, 11, (80, 80, 80), "center", "center")
+        # Red X button in top-right corner
+        xSize = 24
+        xX = px + plateSize - xSize / 2
+        xY = py - xSize / 2
+        draw_rect(xX - xSize / 2, xY - xSize / 2, xSize, xSize, (255, 60, 60), border_radius=12)
+        draw_text("X", xX, xY, 16, (255, 255, 255), "center", "center")
 
 def handlePlatedItemClick():
     global counterItems
@@ -843,11 +850,11 @@ def handlePlatedItemClick():
     plated = getPlatedItems()
     if len(plated) == 0:
         return False
-    plateSize = 100
+    plateSize = 90
     gap = 15
     totalW = len(plated) * (plateSize + gap) - gap
     startX = width / 2 - totalW / 2
-    startY = height - 170
+    startY = height - 210
     for i, item in enumerate(plated):
         px = startX + i * (plateSize + gap)
         py = startY
