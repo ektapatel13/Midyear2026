@@ -5,12 +5,32 @@ import os
 
 # --- Pygame Init ---
 pygame.init()
+pygame.mixer.init()
 WIDTH = 1300
 HEIGHT = 760
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Kitchen Game")
 clock = pygame.time.Clock()
 FPS = 60
+
+# --- Sound System ---
+def load_sound(name):
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), name)
+    try:
+        return pygame.mixer.Sound(path)
+    except:
+        return None
+
+toasterSound = None
+ovenSound = None
+panSound = None
+backgroundMusic = None
+kachingSound = None
+alarmSound = None
+
+toasterSoundPlaying = False
+ovenSoundPlaying = False
+panSoundPlaying = False
 
 # Alias for Processing compatibility
 width = WIDTH
@@ -154,6 +174,8 @@ orderActive = False
 timerExpired = False
 newCustomerDelay = 2000
 newCustomerAt = 0
+
+platedItems = []
 
 menuImg = None
 menuOpen = False
@@ -638,13 +660,14 @@ def getTimerFillWidth():
 
 def resetForNextCustomer():
     global showCustomer, orderActive, dialogOpen, dialogStep, timerExpired
-    global newCustomerAt, currentCustomer, gameStartTime
+    global newCustomerAt, currentCustomer, gameStartTime, platedItems
     showCustomer = False
     orderActive = False
     dialogOpen = False
     dialogStep = 0
     timerExpired = False
     currentCustomer = None
+    platedItems = []
     newCustomerAt = millis() + newCustomerDelay
     gameStartTime = millis() + newCustomerDelay
 
@@ -675,6 +698,8 @@ def serveOrder():
         totalDishes = sum(needed.values())
         earned = orderValue * totalDishes
         money += earned
+        if kachingSound is not None:
+            kachingSound.play()
         scorePopups.append({'text': '+$' + str(earned) + ' Great job!', 'x': width / 2, 'y': 380, 'color': [80, 220, 80], 'time': millis()})
         resetForNextCustomer()
     else:
@@ -693,16 +718,101 @@ def serveOrder():
         msg = "Still need: " + ", ".join(missing)
         scorePopups.append({'text': msg, 'x': width / 2, 'y': 380, 'color': [255, 150, 50], 'time': millis()})
 
+def stopAllCookingSounds():
+    global toasterSoundPlaying, panSoundPlaying, ovenSoundPlaying
+    if toasterSound is not None:
+        toasterSound.stop()
+    toasterSoundPlaying = False
+    if panSound is not None:
+        panSound.stop()
+    panSoundPlaying = False
+    if ovenSound is not None:
+        ovenSound.stop()
+    ovenSoundPlaying = False
+
 def checkTimerExpired():
     global money, scorePopups, timerExpired
+    global counterItems, bowlContents, panContents
+    global toasterCooking, panCooking, ovenCooking, platedItems
     if not orderActive or timerExpired or dialogOpen:
         return
     if getTimerFillWidth() <= 0:
         timerExpired = True
         penalty = orderValue
         money -= penalty
+        if alarmSound is not None:
+            alarmSound.play()
         scorePopups.append({'text': '-$' + str(penalty) + ' Too slow!', 'x': width / 2, 'y': 380, 'color': [255, 80, 80], 'time': millis()})
+        counterItems = []
+        bowlContents = []
+        panContents = []
+        platedItems = []
+        toasterCooking = None
+        panCooking = None
+        ovenCooking = None
+        stopAllCookingSounds()
         resetForNextCustomer()
+
+# --- Plated Items (finished foods shown on order counter) ---
+finishedFoodNames = [
+    "croissant", "pancakes", "egg_sandwich", "avocado_toast",
+    "panini", "cupcake", "cookie"
+]
+
+def getPlatedItems():
+    plated = []
+    for item in counterItems:
+        if item["name"] in finishedFoodNames:
+            plated.append(item)
+    return plated
+
+def drawPlatedItems():
+    if stations[currentStation] != "order":
+        return
+    if not orderActive or not showCustomer:
+        return
+    plated = getPlatedItems()
+    if len(plated) == 0:
+        return
+    plateSize = 100
+    gap = 15
+    totalW = len(plated) * (plateSize + gap) - gap
+    startX = width / 2 - totalW / 2
+    startY = height - 170
+    for i, item in enumerate(plated):
+        px = startX + i * (plateSize + gap)
+        py = startY
+        draw_rect(px - 5, py - 5, plateSize + 10, plateSize + 10, (255, 255, 255, 180), border_radius=12)
+        img = ingredientImgs.get(item["name"], None)
+        if img is not None:
+            draw_img(img, px, py, plateSize, plateSize)
+        else:
+            draw_rect(px, py, plateSize, plateSize, (255, 200, 210), border_radius=8)
+            draw_text(item["name"], px + plateSize / 2, py + plateSize / 2, 11, (80, 80, 80), "center", "center")
+        draw_text("x", px + plateSize - 8, py - 2, 18, (255, 60, 60), "center", "center")
+
+def handlePlatedItemClick():
+    global counterItems
+    if stations[currentStation] != "order":
+        return False
+    if not orderActive or not showCustomer:
+        return False
+    plated = getPlatedItems()
+    if len(plated) == 0:
+        return False
+    plateSize = 100
+    gap = 15
+    totalW = len(plated) * (plateSize + gap) - gap
+    startX = width / 2 - totalW / 2
+    startY = height - 170
+    for i, item in enumerate(plated):
+        px = startX + i * (plateSize + gap)
+        py = startY
+        if isOverRect(mouseX, mouseY, px - 5, py - 5, plateSize + 10, plateSize + 10):
+            counterItems.remove(item)
+            scorePopups.append({'text': 'Tossed ' + item["name"].replace("_", " ") + '!', 'x': width / 2, 'y': 420, 'color': [255, 150, 50], 'time': millis()})
+            return True
+    return False
 
 def drawServeButton():
     if stations[currentStation] != "order":
@@ -1030,18 +1140,49 @@ def drawCookingBar(bx, by, bw, startT, duration):
 
 def checkCookingTimers():
     global toasterCooking, panCooking, ovenCooking
+    global toasterSoundPlaying, panSoundPlaying, ovenSoundPlaying
     if toasterCooking is not None:
+        if not toasterSoundPlaying and toasterSound is not None:
+            toasterSound.play(loops=-1)
+            toasterSoundPlaying = True
         if millis() - toasterStartTime >= toasterDuration:
             spawnCounterItem(toasterCooking)
             toasterCooking = None
+            if toasterSound is not None:
+                toasterSound.stop()
+            toasterSoundPlaying = False
+    else:
+        if toasterSoundPlaying and toasterSound is not None:
+            toasterSound.stop()
+            toasterSoundPlaying = False
     if panCooking is not None:
+        if not panSoundPlaying and panSound is not None:
+            panSound.play(loops=-1)
+            panSoundPlaying = True
         if millis() - panStartTime >= panDuration:
             spawnCounterItem(panCooking)
             panCooking = None
+            if panSound is not None:
+                panSound.stop()
+            panSoundPlaying = False
+    else:
+        if panSoundPlaying and panSound is not None:
+            panSound.stop()
+            panSoundPlaying = False
     if ovenCooking is not None:
+        if not ovenSoundPlaying and ovenSound is not None:
+            ovenSound.play(loops=-1)
+            ovenSoundPlaying = True
         if millis() - ovenStartTime >= ovenDuration:
             spawnCounterItem(ovenCooking)
             ovenCooking = None
+            if ovenSound is not None:
+                ovenSound.stop()
+            ovenSoundPlaying = False
+    else:
+        if ovenSoundPlaying and ovenSound is not None:
+            ovenSound.stop()
+            ovenSoundPlaying = False
 
 # --- Counter Item Helpers ---
 def spawnCounterItem(name):
@@ -1349,6 +1490,8 @@ def on_mouse_clicked():
         if handleMenuClick():
             return
         if stations[currentStation] == "order":
+            if handlePlatedItemClick():
+                return
             if handleServeButtonClick():
                 return
         if stations[currentStation] == "kitchen":
@@ -1440,6 +1583,18 @@ def setup():
     if c2:
         customers.append(c2)
 
+    global toasterSound, ovenSound, panSound, backgroundMusic, kachingSound, alarmSound
+    toasterSound = load_sound("toaster_sound.wav")
+    ovenSound = load_sound("oven_sound.wav")
+    panSound = load_sound("pan_sound.wav")
+    backgroundMusic = load_sound("background_music.wav")
+    kachingSound = load_sound("kaching_sound.wav")
+    alarmSound = load_sound("alarm_sound.wav")
+
+    if backgroundMusic is not None:
+        backgroundMusic.play(loops=-1)
+        backgroundMusic.set_volume(0.3)
+
     setupMenuUI()
     loadMenuAssets()
     setupMenuFoodItems()
@@ -1529,6 +1684,7 @@ def drawGame():
     drawArrows()
     drawFridgeOverlay()
     drawDeleteButton()
+    drawPlatedItems()
     drawServeButton()
 
 def draw_frame():
