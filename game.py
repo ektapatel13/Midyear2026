@@ -152,7 +152,7 @@ gameStartTime = 0
 
 money = 20
 startMoney = 20
-orderValue = 5
+orderValue = 0
 scorePopups = []
 orderActive = False
 
@@ -335,6 +335,16 @@ menuNameToItemName = {
     "panini": "panini",
     "cupcake": "cupcake",
     "cookie": "cookie"
+}
+
+ITEM_PRICES = {
+    "croissant": 4,
+    "pancakes": 7,
+    "egg_sandwhich": 8,
+    "avocado_toast": 6,
+    "panini": 10,
+    "cookie": 3,
+    "cupcake": 5
 }
 
 boardX = 370
@@ -578,10 +588,18 @@ def orderTextFromCounts(counts, kinds):
     return "Can I get " + joinParts(parts) + "?"
 
 def generateNewOrder():
-    global currentOrderCounts, currentOrderKinds, currentOrderText
+    global currentOrderCounts, currentOrderKinds, currentOrderText, orderValue
     currentOrderCounts, currentOrderKinds = buildOrderCounts()
     currentOrderText = orderTextFromCounts(currentOrderCounts, currentOrderKinds)
+    total = 0
+    for menuName, count in currentOrderCounts.items():
+        itemName = menuNameToItemName.get(menuName, menuName.replace(" ", "_"))
+        if itemName in ITEM_PRICES:
+            total += ITEM_PRICES[itemName] * count
+    orderValue = total
+
     return currentOrderText
+
 
 def startCustomerDialog():
     global dialogOpen, dialogStep, greetingText, orderText
@@ -701,8 +719,7 @@ def serveOrder():
                 newServedItems.append(item)
         servedItems = newServedItems
 
-        totalDishes = sum(needed.values())
-        earned = orderValue * totalDishes
+        earned = orderValue
         money += earned
         scorePopups.append({'text': '+$' + str(earned) + ' Great job!', 'x': width / 2, 'y': 380, 'color': [80, 220, 80], 'time': millis()})
         resetForNextCustomer()
@@ -726,7 +743,7 @@ def checkTimerExpired():
         return
     if getTimerFillWidth() <= 0:
         timerExpired = True
-        penalty = orderValue
+        penalty = max(1, int(orderValue * 0.25))
         money -= penalty
         scorePopups.append({'text': '-$' + str(penalty) + ' Too slow!', 'x': width / 2, 'y': 380, 'color': [255, 80, 80], 'time': millis()})
         resetForNextCustomer()
@@ -1557,9 +1574,8 @@ def setup():
     c4 = load_img("character_4_happy.png")
     c5 = load_img("character_5_happy.png")
     c6 = load_img("character_6_happy.png")
-    c7 = load_img("character_7_happy.png")
 
-    for i in range(1, 8):
+    for i in range(1, 7):
         img = load_img(f"character_{i}_happy.png")
         if img is not None:
             customers.append(img)
